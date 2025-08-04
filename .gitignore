@@ -1,0 +1,39 @@
+[Ll]ibrary/
+[Tt]emp/
+[Bb]uild/
+[Bb]uilds/
+[Oo]bj/
+[Mm]emoryCaptures/
+[Ll]ogs/
+
+# Auto-generated VS/JetBrains
+.vscode/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+
+# Unity cache
+*.apk
+*.aab
+
+# Crash logs
+*.stacktrace
+
+# Package manager
+Packages/manifest.json
+Packages/packages-lock.json
+
+# Ignore all files inside Textures folder
+Assets/TerrainSampleAssets/Textures/**
+
+# But keep .meta files so Unity doesn't break
+!Assets/TerrainSampleAssets/Textures/**/*.meta

@@ -9,9 +9,13 @@ onBoardingDoNotAskAgain = true
 showPackageIndexes = false
 showStatusBar = false
 scopes = {
-	"last_search.66F56946" = "light"
+	"last_search.66F56946" = "animator"
 	"OpenInspectorPreview.66F56946" = "0"
 	"currentGroup.66F56946" = "menu"
+	"picker_window_position_offset.075BCD15" = "277;190;320;550"
+	"picker_visibility_flags.075BCD15" = "264"
+	"picker_item_size.075BCD15" = "96"
+	"picker_inspector.075BCD15" = "0"
 }
 providers = {
 	asset = {
@@ -68,6 +72,7 @@ providers = {
 objectSelectors = {
 }
 recentSearches = [
+	"animator"
 	"pack"
 	"lighting"
 ]

@@ -1,41 +1,29 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
-public class AIScript : MonoBehaviour
-{
-    private NavMeshAgent agent;
-    private Transform player;
-    private float distanceToPlayer;
-    private Animator animator;
+public class AIScript : MonoBehaviour {
+    NavMeshAgent agent;
+    Transform player;
+    Animator animator;
 
-    // public variables
-    public float stopDistance = 2.0f;
+    [SerializeField] float stopDistance = 4f;   // set this in Inspector
 
-    // Start is called before the first frame update
-    void Start()
-    {
-        animator = GetComponent<Animator>();
+    void Start() {
         agent = GetComponent<NavMeshAgent>();
+        animator = GetComponent<Animator>();
         player = GameObject.FindGameObjectWithTag("Player").transform;
+        agent.stoppingDistance = stopDistance;
+        agent.autoBraking = true;               // helps slow down before stopping
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        distanceToPlayer = Vector3.Distance(transform.position, player.position);
+    void Update() {
+        agent.SetDestination(player.position);
 
-        if (distanceToPlayer > stopDistance)
-        {
-            agent.isStopped = false;
-            agent.destination = player.position;
-            animator.SetBool("Chasing", true);
-        }
-        else
-        {
-            agent.isStopped = true;
-            animator.SetBool("Chasing", false);
+        // wait until a path is computed before reading remainingDistance
+        if (!agent.pathPending) {
+            bool moving = agent.remainingDistance > agent.stoppingDistance;
+            agent.isStopped = !moving;
+            animator.SetBool("Chasing", moving);
         }
     }
 }

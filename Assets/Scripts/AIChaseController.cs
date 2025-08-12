@@ -17,11 +17,29 @@ public class AIChaseController : MonoBehaviour
     [Header("Respawn Settings")]
     public Transform respawnPoint;
 
+    [Header("Patrol")]
+    public Transform[] patrolPoints;
+    public float waypointTolerance = 0.3f;
+    public float waitAtWaypoint = 0.5f;
+    private int _previousPatrolIndex = -1;
+
+    private int PickNextIndexNoRepeat(int current, int previous, int length)
+    {
+        if (length <= 1) return 0;
+        int next;
+        do { next = Random.Range(0, length); }
+        while ((length > 2) && (next == current || next == previous));
+        return next;
+    }
+
     NavMeshAgent _agent;
     Animator _anim;
 
     Coroutine _chaseRoutine;
+    Coroutine _patrolRoutine;
     bool _cooldownActive;
+    int _patrolIndex;
+
 
     void Awake()
     {
@@ -35,57 +53,132 @@ public class AIChaseController : MonoBehaviour
 
     void Update()
     {
-        // Start chasing when seen (unless in cooldown); stop when not seen
-        if (sight.PlayerSeen && !_cooldownActive && _chaseRoutine == null)
+        if (sight.PlayerSeen && !_cooldownActive)
         {
-            _chaseRoutine = StartCoroutine(ChaseLoop());
+            if (_patrolRoutine != null) { StopCoroutine(_patrolRoutine); _patrolRoutine = null; }
+            if (_chaseRoutine == null) _chaseRoutine = StartCoroutine(ChaseLoop());
+            return;
         }
-        else if (!sight.PlayerSeen && _chaseRoutine != null)
+
+        if (!sight.PlayerSeen)
         {
-            StopCoroutine(_chaseRoutine);
-            _chaseRoutine = null;
+            if (_chaseRoutine != null)
+            {
+                StopCoroutine(_chaseRoutine);
+                _chaseRoutine = null;
+                _agent.isStopped = true;
+                _anim?.SetBool("Chasing", false);
+            }
+
+            if (_patrolRoutine == null && patrolPoints != null && patrolPoints.Length > 0)
+                _patrolRoutine = StartCoroutine(PatrolLoop());
+        }
+    }
+
+
+    void SetNextPatrolIndex()
+    {
+        int last = _patrolIndex;  // remember current
+        _patrolIndex = PickNextIndexNoRepeat(last, _previousPatrolIndex, patrolPoints.Length);
+        _previousPatrolIndex = last;  // store the last, not the new
+    }
+
+    IEnumerator PatrolLoop()
+    {
+        while (!sight.PlayerSeen)
+        {
+            if (patrolPoints == null || patrolPoints.Length == 0) break;
+
+            Transform point = patrolPoints[_patrolIndex];
+            if (point == null)
+            {
+                yield return null;
+                SetNextPatrolIndex();
+                continue;
+            }
+
+            _anim?.SetBool("Patrolling", true);
+            _agent.isStopped = false;
+            _agent.SetDestination(point.position);
+
+            while (!sight.PlayerSeen)
+            {
+                if (!_agent.pathPending && 
+                    _agent.remainingDistance <= Mathf.Max(waypointTolerance, _agent.stoppingDistance + _agent.radius))
+                    break; // arrived
+
+                yield return null;
+            }
+
+            _anim?.SetBool("Patrolling", false);
+
+            if (sight.PlayerSeen) break;
+
             _agent.isStopped = true;
-            _anim?.SetBool("Chasing", false);
+            float t = 0f;
+            while (t < waitAtWaypoint && !sight.PlayerSeen)
+            {
+                t += Time.deltaTime;
+                yield return null;
+            }
+
+            SetNextPatrolIndex();
         }
+
+        _anim?.SetBool("Patrolling", false);
+        _agent.isStopped = true;
+        _patrolRoutine = null;
     }
 
     IEnumerator ChaseLoop()
     {
-        _anim?.SetBool("Chasing", true);
+        _agent.isStopped = false;
 
         while (sight.PlayerSeen && !_cooldownActive)
         {
-            _agent.isStopped = false;
+            // keep updating destination
             _agent.SetDestination(sight.LastSeenPosition);
 
+            // set chasing anim only if we are actually moving
+            bool moving = _agent.velocity.sqrMagnitude > 0.04f &&
+                        (_agent.pathPending || _agent.remainingDistance > _agent.stoppingDistance + 0.05f);
+            _anim?.SetBool("Chasing", moving);
+
+            // small wait to avoid hammering SetDestination
             float t = 0f;
             while (t < repathEvery)
             {
-                if (!sight.PlayerSeen) break;
+                if (!sight.PlayerSeen || _cooldownActive) break;
                 t += Time.deltaTime;
                 yield return null;
             }
         }
 
+        // clean up when chase ends
         _anim?.SetBool("Chasing", false);
         _agent.isStopped = true;
         _chaseRoutine = null;
     }
+
 
     public void Caught()
     {
         if (_cooldownActive) return;
         _cooldownActive = true;
 
+        // Stop any movement/state coroutines
+        if (_chaseRoutine != null) { StopCoroutine(_chaseRoutine); _chaseRoutine = null; }
+        if (_patrolRoutine != null) { StopCoroutine(_patrolRoutine); _patrolRoutine = null; }
+
         _agent.isStopped = true;
         _agent.ResetPath();
 
         _anim?.SetBool("Chasing", false);
+        _anim?.SetBool("Patrolling", false);
         _anim?.SetTrigger("Caught");
 
         Debug.Log("Player caught!");
 
-        // run the sequence withdeath-cam hold
         StartCoroutine(HandleDeathAndRespawn());
     }
 

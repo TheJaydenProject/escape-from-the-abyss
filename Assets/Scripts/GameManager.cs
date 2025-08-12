@@ -1,28 +1,51 @@
 using UnityEngine;
-using TMPro; // <-- TMP
+using TMPro; // TMP
 
-public enum GameState { Playing, Won, Paused }
+public enum GameState { Playing, MilestoneReached, Paused }
 
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
-    [Header("Collection")]
-    [Min(1)] public int targetVHS = 20;
-    public int currentVHS { get; private set; }
+    [Header("Collection Goal")]
+    [Min(1)] public int targetVHS = 25; 
+    [SerializeField] public int currentVHS = 0;
 
-    [Header("HUD")]
+    [Header("HUD - Counter")]
     [Tooltip("Drag the HUD TextMeshProUGUI GameObject here (or a parent of it).")]
     public GameObject vhsCounterObject;
-
-    // Cache TMP component
     private TMP_Text vhsCounterText;
+
+    [Header("HUD - Milestone Instructions")]
+    [Tooltip("Flash panel/text that auto-hides after 'flashDuration'.")]
+    public GameObject instructionHudFlash;
+    public float flashDuration = 2f;
+
+    [Space(6)]
+    [Tooltip("Persistent panel/text that stays visible after milestone.")]
+    public GameObject instructionHudPersistent;
+
+    // Key spawn instruction HUDs
+    [Header("HUD - Key Spawn Instructions")]
+    [Tooltip("Flash panel/text that auto-hides after 'keyFlashDuration'.")]
+    public GameObject instructionHud2Flash;
+    public float keyFlashDuration = 2f;
+
+    [Space(6)]
+    [Tooltip("Persistent panel/text that stays visible after key spawns.")]
+    public GameObject instructionHud2Persistent;
 
     [Header("State")]
     public GameState State { get; private set; } = GameState.Playing;
+    public bool vhsMilestoneReached { get; private set; } = false;
+    public bool keyIsSpawned { get; set; } = false;
 
+    // Event: VHS count updated
     public event System.Action<int, int> OnVHSCountChanged;
-    public event System.Action OnWin;
+    // Event: VHS milestone reached
+    public event System.Action OnVHSMilestone;
+
+    bool _instruction2Shown = false;
 
     void Awake()
     {
@@ -30,15 +53,38 @@ public class GameManager : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
 
-        CacheHudTextComponent();
+        CacheCounterText();
+        if (vhsCounterObject) vhsCounterObject.SetActive(true);
         UpdateVHSCounterUI();
         OnVHSCountChanged?.Invoke(currentVHS, targetVHS);
+
+        // Ensure both instruction HUDs start hidden
+        if (instructionHudFlash)      instructionHudFlash.SetActive(false);
+        if (instructionHudPersistent) instructionHudPersistent.SetActive(false);
+
+        if (instructionHud2Flash)      instructionHud2Flash.SetActive(false);
+        if (instructionHud2Persistent) instructionHud2Persistent.SetActive(false);
     }
 
     void Start()
     {
-        if (vhsCounterText == null) CacheHudTextComponent();
+        if (vhsCounterText == null) CacheCounterText();
         UpdateVHSCounterUI();
+    }
+
+    void Update()
+    {
+        // When the key spawns, hide the first persistent HUD and show instruction HUD #2 (once)
+        if (keyIsSpawned && !_instruction2Shown)
+        {
+            _instruction2Shown = true;
+
+            // Hide the first persistent instructions if they are showing
+            if (instructionHudPersistent) instructionHudPersistent.SetActive(false);
+            if (instructionHudFlash)      instructionHudFlash.SetActive(false);
+
+            ShowKeySpawnInstructions();
+        }
     }
 
     public bool CollectVHS()
@@ -52,34 +98,84 @@ public class GameManager : MonoBehaviour
 
         if (currentVHS >= targetVHS)
         {
-            State = GameState.Won;
-            OnWin?.Invoke();
+            State = GameState.MilestoneReached;
+            vhsMilestoneReached = true;
+            if (vhsCounterObject) vhsCounterObject.SetActive(false);
+            ShowMilestoneInstructions();
+            OnVHSMilestone?.Invoke();
         }
         return true;
     }
 
-    void CacheHudTextComponent()
+    // --- helpers ---
+
+    void CacheCounterText()
     {
-        if (vhsCounterObject == null)
-        {
-            Debug.LogWarning("[GameManager] vhsCounterObject not assigned.");
-            return;
-        }
-
-        // Try on the object itself first…
-        vhsCounterText = vhsCounterObject.GetComponent<TMP_Text>();
-        // …then search children (covers cases where the TMP is on a child)
-        if (vhsCounterText == null)
-            vhsCounterText = vhsCounterObject.GetComponentInChildren<TMP_Text>(true);
-
-        if (vhsCounterText == null)
-            Debug.LogWarning("[GameManager] No TMP_Text found on vhsCounterObject or its children.");
+        if (!vhsCounterObject) { Debug.LogWarning("[GameManager] vhsCounterObject not assigned."); return; }
+        vhsCounterText = vhsCounterObject.GetComponent<TMP_Text>()
+                      ?? vhsCounterObject.GetComponentInChildren<TMP_Text>(true);
+        if (!vhsCounterText) Debug.LogWarning("[GameManager] No TMP_Text found for vhsCounterObject.");
     }
 
     void UpdateVHSCounterUI()
     {
-        if (vhsCounterText != null)
-            vhsCounterText.text = $"{currentVHS} / {targetVHS}";
+        if (vhsCounterText) vhsCounterText.text = $"{currentVHS} / {targetVHS}";
+    }
+
+    void ShowMilestoneInstructions()
+    {
+        // Flash HUD
+        if (instructionHudFlash)
+        {
+            instructionHudFlash.SetActive(true);
+            var tmp = instructionHudFlash.GetComponent<TMP_Text>()
+                   ?? instructionHudFlash.GetComponentInChildren<TMP_Text>(true);
+            StopAllCoroutines(); // in case of multiple triggers, be safe
+            StartCoroutine(HideFlashAfterDelay());
+        }
+
+        // Persistent HUD
+        if (instructionHudPersistent)
+        {
+            instructionHudPersistent.SetActive(true);
+            var tmp = instructionHudPersistent.GetComponent<TMP_Text>()
+                   ?? instructionHudPersistent.GetComponentInChildren<TMP_Text>(true);
+        }
+    }
+
+    System.Collections.IEnumerator HideFlashAfterDelay()
+    {
+        float t = Mathf.Max(0f, flashDuration);
+        if (t > 0f) yield return new WaitForSeconds(t);
+        if (instructionHudFlash) instructionHudFlash.SetActive(false);
+    }
+
+    // Show instruction HUDs for key spawn
+    void ShowKeySpawnInstructions()
+    {
+        // Flash HUD 2
+        if (instructionHud2Flash)
+        {
+            instructionHud2Flash.SetActive(true);
+            var tmp = instructionHud2Flash.GetComponent<TMP_Text>()
+                   ?? instructionHud2Flash.GetComponentInChildren<TMP_Text>(true);
+            StartCoroutine(HideKeyFlashAfterDelay());
+        }
+
+        // Persistent HUD 2
+        if (instructionHud2Persistent)
+        {
+            instructionHud2Persistent.SetActive(true);
+            var tmp = instructionHud2Persistent.GetComponent<TMP_Text>()
+                   ?? instructionHud2Persistent.GetComponentInChildren<TMP_Text>(true);
+        }
+    }
+
+    System.Collections.IEnumerator HideKeyFlashAfterDelay()
+    {
+        float t = Mathf.Max(0f, keyFlashDuration);
+        if (t > 0f) yield return new WaitForSeconds(t);
+        if (instructionHud2Flash) instructionHud2Flash.SetActive(false);
     }
 
     public void PauseGame()

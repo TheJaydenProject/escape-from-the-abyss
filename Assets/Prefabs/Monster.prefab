@@ -283,8 +283,8 @@ NavMeshAgent:
   m_GameObject: {fileID: 619318017425465923}
   m_Enabled: 1
   m_AgentTypeID: 0
-  m_Radius: 0.5
-  m_Speed: 6
+  m_Radius: 0.4
+  m_Speed: 5
   m_Acceleration: 8
   avoidancePriority: 50
   m_AngularSpeed: 120
@@ -310,8 +310,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   detectionRadius: 8
   fovAngle: 179
-  eyeHeight: 1.7
-  memoryTime: 4
+  eyeHeight: 1.5
+  memoryTime: 3
   tickInterval: 0.1
   losObstacles:
     serializedVersion: 2
@@ -337,10 +337,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   sight: {fileID: 4453283561599068478}
-  caughtDistance: 4
+  caughtDistance: 1
   repathEvery: 0.2
-  caughtCooldown: 10
+  caughtCooldown: 5
   playerMovementToDisable: {fileID: 0}
+  hudRoots: []
   mainCam: {fileID: 0}
   deathCam: {fileID: 3324923701510689169}
   respawnPoint: {fileID: 0}
@@ -1881,7 +1882,7 @@ Camera:
   m_GameObject: {fileID: 6054303342821147041}
   m_Enabled: 1
   serializedVersion: 2
-  m_ClearFlags: 1
+  m_ClearFlags: 4
   m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
@@ -1911,7 +1912,7 @@ Camera:
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 4055
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
@@ -1954,8 +1955,8 @@ MonoBehaviour:
     m_Bits: 1
   m_VolumeTrigger: {fileID: 0}
   m_VolumeFrameworkUpdateModeOption: 2
-  m_RenderPostProcessing: 0
-  m_Antialiasing: 0
+  m_RenderPostProcessing: 1
+  m_Antialiasing: 3
   m_AntialiasingQuality: 2
   m_StopNaN: 0
   m_Dithering: 0
@@ -1970,7 +1971,7 @@ MonoBehaviour:
   m_Version: 2
   m_TaaSettings:
     m_Quality: 3
-    m_FrameInfluence: 0.1
+    m_FrameInfluence: 0.100000024
     m_JitterScale: 1
     m_MipBias: 0
     m_VarianceClampScale: 0.9

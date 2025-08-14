@@ -11,6 +11,13 @@ public class AIChaseController : MonoBehaviour
     public float caughtCooldown = 4f; // seconds
     public Behaviour playerMovementToDisable;
 
+    [Header("HUD")]
+    [SerializeField] private GameObject[] hudRoots;
+
+    private bool[] _hudWasActive;   
+    private bool _hudHiddenForDeath;
+
+
     [Header("Cameras")]
     public Camera mainCam;
     public Camera deathCam;
@@ -183,6 +190,43 @@ public class AIChaseController : MonoBehaviour
         StartCoroutine(HandleDeathAndRespawn());
     }
 
+    void HideHUDForDeath()
+    {
+        if (hudRoots == null || _hudHiddenForDeath) return;
+
+        if (_hudWasActive == null || _hudWasActive.Length != hudRoots.Length)
+            _hudWasActive = new bool[hudRoots.Length];
+
+        for (int i = 0; i < hudRoots.Length; i++)
+        {
+            var go = hudRoots[i];
+            if (!go) continue;
+
+            // remember the state the dev set in the scene / before death
+            _hudWasActive[i] = go.activeSelf;
+
+            // hide for death sequence
+            go.SetActive(false);
+        }
+
+        _hudHiddenForDeath = true;
+    }
+
+    void RestoreHUDAfterDeath()
+    {
+        if (hudRoots == null || !_hudHiddenForDeath) return;
+
+        for (int i = 0; i < hudRoots.Length; i++)
+        {
+            var go = hudRoots[i];
+            if (!go) continue;
+
+            // restore exactly what it was before HideHUDForDeath()
+            go.SetActive(_hudWasActive[i]);
+        }
+
+        _hudHiddenForDeath = false;
+    }
     private IEnumerator HandleDeathAndRespawn()
     {
         // Disable player movement
@@ -191,14 +235,15 @@ public class AIChaseController : MonoBehaviour
         // Switch to death cam
         if (mainCam != null) { mainCam.enabled = false; mainCam.gameObject.SetActive(false); }
         if (deathCam != null) { deathCam.gameObject.SetActive(true); deathCam.enabled = true; }
+        HideHUDForDeath();
 
         // Stay on death cam for Xs
         yield return new WaitForSeconds(1.8f);
 
         // Teleport to respawn
-        var t  = playerMovementToDisable.transform;
+        var t = playerMovementToDisable.transform;
         var cc = t.GetComponent<CharacterController>();
-        
+
         if (cc != null)
         {
             cc.enabled = false;
@@ -213,6 +258,7 @@ public class AIChaseController : MonoBehaviour
         // Switch back to main cam
         if (deathCam != null) { deathCam.enabled = false; deathCam.gameObject.SetActive(false); }
         if (mainCam != null) { mainCam.gameObject.SetActive(true); mainCam.enabled = true; }
+        RestoreHUDAfterDeath();
 
         // Re-enable player movement
         if (playerMovementToDisable != null) playerMovementToDisable.enabled = true;

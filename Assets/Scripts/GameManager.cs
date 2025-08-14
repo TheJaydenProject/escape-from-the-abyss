@@ -43,6 +43,9 @@ public class GameManager : MonoBehaviour
     public GameObject keyPickupFlash;
     public float keyPickupFlashDuration = 2f;
 
+    [Header("Key Pickup - Show/Enable")]
+    public GameObject[] enableOnKeyPickup;
+
     // --- TIMER HUD ---
     [Header("HUD - Timer (Persistent)")]
     public GameObject timerHudObject;
@@ -66,6 +69,10 @@ public class GameManager : MonoBehaviour
     public bool hasExitKey { get; private set; } = false;
     public event System.Action<int, int> OnVHSCountChanged;
 
+    [Header("End State - Freeze Stuff")]
+    public Transform[] detachOnEnd;         
+    public Behaviour[] disableOnEnd;         
+
     // Event: VHS milestone reached
     public event System.Action OnVHSMilestone;
     bool _instruction2Shown = false;
@@ -84,7 +91,7 @@ public class GameManager : MonoBehaviour
         UpdateVHSCounterUI();
         OnVHSCountChanged?.Invoke(currentVHS, targetVHS);
 
-        if (timerHudObject) timerHudObject.SetActive(true); 
+        if (timerHudObject) timerHudObject.SetActive(true);
         UpdateTimerUI();
 
         // Ensure both instruction HUDs start hidden
@@ -118,11 +125,11 @@ public class GameManager : MonoBehaviour
 
             ShowKeySpawnInstructions();
         }
-        
+
         // TIMER
         if (_timerRunning && State != GameState.Paused && State != GameState.Ended)
         {
-            _elapsedTime += Time.deltaTime; 
+            _elapsedTime += Time.deltaTime;
             UpdateTimerUI();
         }
     }
@@ -159,6 +166,7 @@ public class GameManager : MonoBehaviour
         if (hasExitKey) return false;   // prevent double-pickup
         hasExitKey = true;
         HideKeySpawnInstructions();
+        SetActiveAll(enableOnKeyPickup, true);
 
         // Flash HUD
         if (keyPickupFlash)
@@ -172,6 +180,13 @@ public class GameManager : MonoBehaviour
             keyPickupPersistent.SetActive(true);
 
         return true;
+    }
+
+    void SetActiveAll(GameObject[] list, bool active)
+    {
+        if (list == null) return;
+        for (int i = 0; i < list.Length; i++)
+            if (list[i]) list[i].SetActive(active);
     }
 
     private System.Collections.IEnumerator HideKeyPickupFlashAfterDelay()
@@ -299,12 +314,14 @@ public class GameManager : MonoBehaviour
 
         // Stop camera movement
         if (lookScript != null) lookScript.enabled = false;
+        DisableAll(disableOnEnd);         
+        DetachAll(detachOnEnd);
 
         // Unlock & show cursor
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
-        
+
         // Update death count in end screen
         if (endGameDeathCounter != null)
             endGameDeathCounter.text = $"Deaths: {DeathCount}";
@@ -316,7 +333,7 @@ public class GameManager : MonoBehaviour
         // Show end screen
         if (gameEndHud) gameEndHud.SetActive(true);
     }
-    
+
     string FormatTime(float t)
     {
         int minutes = Mathf.FloorToInt(t / 60f);
@@ -337,8 +354,22 @@ public class GameManager : MonoBehaviour
         UpdateTimerUI();
     }
 
-    public void StartTimer()  { _timerRunning = true; }
-    public void StopTimer()   { _timerRunning = false; }
+    public void StartTimer() { _timerRunning = true; }
+    public void StopTimer() { _timerRunning = false; }
+    
+
+    void DisableAll(Behaviour[] list)
+    {
+        if (list == null) return;
+        foreach (var b in list) if (b) b.enabled = false;
+    }
+
+    void DetachAll(Transform[] list)
+    {
+        if (list == null) return;
+        foreach (var t in list) if (t) t.SetParent(null, true); // keep world pos
+    }
+
 
 }
 

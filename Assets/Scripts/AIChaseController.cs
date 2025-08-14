@@ -165,6 +165,7 @@ public class AIChaseController : MonoBehaviour
     {
         if (_cooldownActive) return;
         _cooldownActive = true;
+        GameManager.Instance?.RegisterDeath();
 
         // Stop any movement/state coroutines
         if (_chaseRoutine != null) { StopCoroutine(_chaseRoutine); _chaseRoutine = null; }

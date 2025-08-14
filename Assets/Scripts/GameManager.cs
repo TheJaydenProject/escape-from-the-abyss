@@ -1,11 +1,13 @@
 using UnityEngine;
 using TMPro;
+using System;
 
 public enum GameState { Playing, MilestoneReached, Paused }
 
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
+    public event Action<int> OnDeathCountChanged;
 
     [Header("Collection Goal")]
     [Min(1)] public int targetVHS = 25;
@@ -43,6 +45,7 @@ public class GameManager : MonoBehaviour
 
     [Header("HUD - Game End")]
     public GameObject gameEndHud;
+    public TMP_Text endGameDeathCounter;
     [Header("References")]
     public MonoBehaviour lookScript; 
 
@@ -57,13 +60,11 @@ public class GameManager : MonoBehaviour
     public GameState State { get; private set; } = GameState.Playing;
     public bool vhsMilestoneReached { get; private set; } = false;
     public bool keyIsSpawned { get; set; } = false;
-
-    // Event: VHS count updated
     public event System.Action<int, int> OnVHSCountChanged;
     // Event: VHS milestone reached
     public event System.Action OnVHSMilestone;
-
     bool _instruction2Shown = false;
+    public int DeathCount { get; private set; } = 0;
 
     void Awake()
     {
@@ -106,6 +107,13 @@ public class GameManager : MonoBehaviour
 
             ShowKeySpawnInstructions();
         }
+    }
+
+    public void RegisterDeath()
+    {
+        DeathCount++;
+        OnDeathCountChanged?.Invoke(DeathCount);
+        // Debug.Log($"Deaths: {DeathCount}");
     }
 
     public bool CollectVHS()
@@ -265,6 +273,11 @@ public class GameManager : MonoBehaviour
         // Unlock & show cursor
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
+
+        
+        // Update death count in end screen
+        if (endGameDeathCounter != null)
+            endGameDeathCounter.text = $"Deaths: {DeathCount}";
 
         // Show end screen
         if (gameEndHud) gameEndHud.SetActive(true);

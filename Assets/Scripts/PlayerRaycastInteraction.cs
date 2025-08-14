@@ -8,35 +8,38 @@ public class PlayerInteractorRaycast : MonoBehaviour
     public float interactRange = 3f;
 
     [Header("Layers")]
-    public LayerMask vhsLayer;       // set to your VHS layer
-    public LayerMask computerLayer;  // set to your Computer layer
+    public LayerMask vhsLayer;       
+    public LayerMask computerLayer;  
+    public LayerMask keyLayer; 
 
-    [Header("VHS Prompt (generic)")]
-    public GameObject promptPanel;   // e.g., “[E] Pick up”
-    public Text promptText;
+    [Header("VHS Prompt")]
+    public GameObject VHSpromptPanel;   
 
-    [Header("Computer Prompts (milestone-based)")]
+    [Header("Computer Prompts")]
     public GameObject promptHudBeforeMilestone; // shown if milestone FALSE
-    public Text promptTextBefore;               // optional
     public GameObject promptHudAfterMilestone;  // shown if milestone TRUE
-    public Text promptTextAfter;                // optional
+
+    [Header("Key Prompt")]
+    public GameObject KeypromptPanel; 
 
     private IInteractable current;
     private int _vhsMaskValue;
     private int _computerMaskValue;
+    private int _keyMaskValue;
 
     void Awake()
     {
         _vhsMaskValue = vhsLayer.value;
         _computerMaskValue = computerLayer.value;
+        _keyMaskValue = keyLayer.value;
     }
 
     void Update()
     {
         current = null;
 
-        // Raycast against both layers at once
-        int combinedMask = _vhsMaskValue | _computerMaskValue;
+        // Raycast against all layers at once
+        int combinedMask = _vhsMaskValue | _computerMaskValue | _keyMaskValue;
 
         if (cam != null && Physics.Raycast(
                 cam.transform.position, cam.transform.forward,
@@ -55,8 +58,7 @@ public class PlayerInteractorRaycast : MonoBehaviour
                 // VHS LAYER BEHAVIOUR
                 if ( (hitLayerBit & _vhsMaskValue) != 0 )
                 {
-                    if (promptPanel) promptPanel.SetActive(true);
-                    if (promptText)  promptText.text = current.PromptText;
+                    if (VHSpromptPanel) VHSpromptPanel.SetActive(true);
                 }
 
                 // COMPUTER LAYER BEHAVIOUR
@@ -69,13 +71,17 @@ public class PlayerInteractorRaycast : MonoBehaviour
                     if (!milestone)
                     {
                         if (promptHudBeforeMilestone) promptHudBeforeMilestone.SetActive(true);
-                        if (promptTextBefore) promptTextBefore.text = current.PromptText;
                     }
                     else
                     {
                         if (promptHudAfterMilestone) promptHudAfterMilestone.SetActive(true);
-                        if (promptTextAfter) promptTextAfter.text = current.PromptText;
                     }
+                }
+
+                // KEY...
+                else if ((hitLayerBit & _keyMaskValue) != 0)
+                {
+                    if (KeypromptPanel) KeypromptPanel.SetActive(true);
                 }
 
                 // Interact
@@ -93,8 +99,9 @@ public class PlayerInteractorRaycast : MonoBehaviour
 
     void HideAllPrompts()
     {
-        if (promptPanel)               promptPanel.SetActive(false);
-        if (promptHudBeforeMilestone)  promptHudBeforeMilestone.SetActive(false);
+        if (VHSpromptPanel) VHSpromptPanel.SetActive(false);
+        if (KeypromptPanel) KeypromptPanel.SetActive(false);
+        if (promptHudBeforeMilestone) promptHudBeforeMilestone.SetActive(false);
         if (promptHudAfterMilestone)   promptHudAfterMilestone.SetActive(false);
     }
 }

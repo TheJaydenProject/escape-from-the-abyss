@@ -1,5 +1,5 @@
 using UnityEngine;
-using TMPro; // TMP
+using TMPro;
 
 public enum GameState { Playing, MilestoneReached, Paused }
 
@@ -8,7 +8,7 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance { get; private set; }
 
     [Header("Collection Goal")]
-    [Min(1)] public int targetVHS = 25; 
+    [Min(1)] public int targetVHS = 25;
     [SerializeField] public int currentVHS = 0;
 
     [Header("HUD - Counter")]
@@ -35,6 +35,18 @@ public class GameManager : MonoBehaviour
     [Tooltip("Persistent panel/text that stays visible after key spawns.")]
     public GameObject instructionHud2Persistent;
 
+    // --- KEY PICKUP HUDs ---
+    [Header("HUD - Key Pickup")]
+    [Tooltip("Flash panel/text that auto-hides after 'keyPickupFlashDuration'.")]
+    public GameObject keyPickupFlash;
+    public float keyPickupFlashDuration = 2f;
+
+    [Space(6)]
+    [Tooltip("Persistent panel/text that stays visible after picking up the key.")]
+    public GameObject keyPickupPersistent;
+
+    public bool hasExitKey { get; private set; } = false;
+
     [Header("State")]
     public GameState State { get; private set; } = GameState.Playing;
     public bool vhsMilestoneReached { get; private set; } = false;
@@ -59,11 +71,14 @@ public class GameManager : MonoBehaviour
         OnVHSCountChanged?.Invoke(currentVHS, targetVHS);
 
         // Ensure both instruction HUDs start hidden
-        if (instructionHudFlash)      instructionHudFlash.SetActive(false);
+        if (instructionHudFlash) instructionHudFlash.SetActive(false);
         if (instructionHudPersistent) instructionHudPersistent.SetActive(false);
 
-        if (instructionHud2Flash)      instructionHud2Flash.SetActive(false);
+        if (instructionHud2Flash) instructionHud2Flash.SetActive(false);
         if (instructionHud2Persistent) instructionHud2Persistent.SetActive(false);
+
+        if (keyPickupFlash) keyPickupFlash.SetActive(false);
+        if (keyPickupPersistent) keyPickupPersistent.SetActive(false);
     }
 
     void Start()
@@ -81,7 +96,7 @@ public class GameManager : MonoBehaviour
 
             // Hide the first persistent instructions if they are showing
             if (instructionHudPersistent) instructionHudPersistent.SetActive(false);
-            if (instructionHudFlash)      instructionHudFlash.SetActive(false);
+            if (instructionHudFlash) instructionHudFlash.SetActive(false);
 
             ShowKeySpawnInstructions();
         }
@@ -90,7 +105,7 @@ public class GameManager : MonoBehaviour
     public bool CollectVHS()
     {
         if (State != GameState.Playing) return false;
-        if (currentVHS >= targetVHS)     return false;
+        if (currentVHS >= targetVHS) return false;
 
         currentVHS++;
         OnVHSCountChanged?.Invoke(currentVHS, targetVHS);
@@ -107,7 +122,38 @@ public class GameManager : MonoBehaviour
         return true;
     }
 
-    // --- helpers ---
+
+    public bool CollectKey()
+    {
+        if (hasExitKey) return false;   // prevent double-pickup
+        hasExitKey = true;
+        HideKeySpawnInstructions();
+
+        // Flash HUD
+        if (keyPickupFlash)
+        {
+            keyPickupFlash.SetActive(true);
+            StartCoroutine(HideKeyPickupFlashAfterDelay());
+        }
+
+        // Persistent HUD
+        if (keyPickupPersistent)
+            keyPickupPersistent.SetActive(true);
+
+        return true;
+    }
+
+    private System.Collections.IEnumerator HideKeyPickupFlashAfterDelay()
+    {
+        float t = Mathf.Max(0f, keyPickupFlashDuration);
+        if (t > 0f)
+            yield return new WaitForSeconds(t);
+
+        if (keyPickupFlash)
+            keyPickupFlash.SetActive(false);
+    }
+
+
 
     void CacheCounterText()
     {
@@ -187,4 +233,13 @@ public class GameManager : MonoBehaviour
     {
         if (State == GameState.Paused) { State = GameState.Playing; Time.timeScale = 1f; }
     }
+    
+
+    void HideKeySpawnInstructions()
+    {
+        if (instructionHud2Flash)      instructionHud2Flash.SetActive(false);
+        if (instructionHud2Persistent) instructionHud2Persistent.SetActive(false);
+    }
+
 }
+

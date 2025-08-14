@@ -41,6 +41,12 @@ public class GameManager : MonoBehaviour
     public GameObject keyPickupFlash;
     public float keyPickupFlashDuration = 2f;
 
+    [Header("HUD - Game End")]
+    public GameObject gameEndHud;
+    [Header("References")]
+    public MonoBehaviour lookScript; 
+
+
     [Space(6)]
     [Tooltip("Persistent panel/text that stays visible after picking up the key.")]
     public GameObject keyPickupPersistent;
@@ -233,12 +239,35 @@ public class GameManager : MonoBehaviour
     {
         if (State == GameState.Paused) { State = GameState.Playing; Time.timeScale = 1f; }
     }
-    
+
 
     void HideKeySpawnInstructions()
     {
+        if (instructionHud2Flash) instructionHud2Flash.SetActive(false);
+        if (instructionHud2Persistent) instructionHud2Persistent.SetActive(false);
+    }
+    
+    public void ShowGameEndHUD()
+    {
+        // Hide any other HUDs
         if (instructionHud2Flash)      instructionHud2Flash.SetActive(false);
         if (instructionHud2Persistent) instructionHud2Persistent.SetActive(false);
+        if (keyPickupFlash)             keyPickupFlash.SetActive(false);
+        if (keyPickupPersistent)        keyPickupPersistent.SetActive(false);
+
+        // Stop the game
+        State = GameState.Paused;
+        Time.timeScale = 0f;
+
+        // Stop camera movement
+        if (lookScript != null) lookScript.enabled = false;
+
+        // Unlock & show cursor
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+
+        // Show end screen
+        if (gameEndHud) gameEndHud.SetActive(true);
     }
 
 }

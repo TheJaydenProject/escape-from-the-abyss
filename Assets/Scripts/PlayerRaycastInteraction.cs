@@ -11,6 +11,7 @@ public class PlayerInteractorRaycast : MonoBehaviour
     public LayerMask vhsLayer;       
     public LayerMask computerLayer;  
     public LayerMask keyLayer; 
+    public LayerMask doorLayer;
 
     [Header("VHS Prompt")]
     public GameObject VHSpromptPanel;   
@@ -22,16 +23,21 @@ public class PlayerInteractorRaycast : MonoBehaviour
     [Header("Key Prompt")]
     public GameObject KeypromptPanel; 
 
+    [Header("Door Prompt")]
+    public GameObject DoorPromptPanel;
+
     private IInteractable current;
     private int _vhsMaskValue;
     private int _computerMaskValue;
     private int _keyMaskValue;
+    private int _doorMaskValue;
 
     void Awake()
     {
         _vhsMaskValue = vhsLayer.value;
         _computerMaskValue = computerLayer.value;
         _keyMaskValue = keyLayer.value;
+        _doorMaskValue = doorLayer.value;
     }
 
     void Update()
@@ -39,7 +45,7 @@ public class PlayerInteractorRaycast : MonoBehaviour
         current = null;
 
         // Raycast against all layers at once
-        int combinedMask = _vhsMaskValue | _computerMaskValue | _keyMaskValue;
+        int combinedMask = _vhsMaskValue | _computerMaskValue | _keyMaskValue | _doorMaskValue;
 
         if (cam != null && Physics.Raycast(
                 cam.transform.position, cam.transform.forward,
@@ -78,10 +84,16 @@ public class PlayerInteractorRaycast : MonoBehaviour
                     }
                 }
 
-                // KEY...
+                // KEY
                 else if ((hitLayerBit & _keyMaskValue) != 0)
                 {
                     if (KeypromptPanel) KeypromptPanel.SetActive(true);
+                }
+
+                // Door
+                else if ((hitLayerBit & _doorMaskValue) != 0)
+                {
+                    if (DoorPromptPanel) DoorPromptPanel.SetActive(true);
                 }
 
                 // Interact
@@ -102,6 +114,7 @@ public class PlayerInteractorRaycast : MonoBehaviour
         if (VHSpromptPanel) VHSpromptPanel.SetActive(false);
         if (KeypromptPanel) KeypromptPanel.SetActive(false);
         if (promptHudBeforeMilestone) promptHudBeforeMilestone.SetActive(false);
-        if (promptHudAfterMilestone)   promptHudAfterMilestone.SetActive(false);
+        if (promptHudAfterMilestone) promptHudAfterMilestone.SetActive(false);
+        if (DoorPromptPanel) DoorPromptPanel.SetActive(false);
     }
 }

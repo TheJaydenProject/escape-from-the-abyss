@@ -20,7 +20,6 @@ public class CollectibleVHS : MonoBehaviour, IInteractable
     public float collectedPanelTime = 2f;
 
     [Header("VFX/SFX (optional)")]
-    public ParticleSystem pickupVfx;
     public AudioSource pickupSfx;
 
     public string PromptText => "Press E to collect VHS";
@@ -29,7 +28,6 @@ public class CollectibleVHS : MonoBehaviour, IInteractable
     {
         if (GameManager.Instance != null && GameManager.Instance.CollectVHS())
         {
-            if (pickupVfx) Instantiate(pickupVfx, transform.position, Quaternion.identity);
             if (pickupSfx) pickupSfx.Play();
 
             if (collectedPanel != null)

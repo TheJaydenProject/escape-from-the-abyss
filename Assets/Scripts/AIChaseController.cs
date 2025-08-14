@@ -170,8 +170,9 @@ public class AIChaseController : MonoBehaviour
 
     public void Caught()
     {
-        if (_cooldownActive) return;
+        if (_cooldownActive || GameManager.Instance.IsHandlingDeath) return;
         _cooldownActive = true;
+        GameManager.Instance.IsHandlingDeath = true;
         GameManager.Instance?.RegisterDeath();
 
         // Stop any movement/state coroutines
@@ -232,6 +233,10 @@ public class AIChaseController : MonoBehaviour
         // Disable player movement
         if (playerMovementToDisable != null) playerMovementToDisable.enabled = false;
 
+        // Teleport to respawn
+        var t = playerMovementToDisable.transform;
+        var cc = t.GetComponent<CharacterController>();
+
         // Switch to death cam
         if (mainCam != null) { mainCam.enabled = false; mainCam.gameObject.SetActive(false); }
         if (deathCam != null) { deathCam.gameObject.SetActive(true); deathCam.enabled = true; }
@@ -239,10 +244,6 @@ public class AIChaseController : MonoBehaviour
 
         // Stay on death cam for Xs
         yield return new WaitForSeconds(1.8f);
-
-        // Teleport to respawn
-        var t = playerMovementToDisable.transform;
-        var cc = t.GetComponent<CharacterController>();
 
         if (cc != null)
         {
@@ -262,6 +263,8 @@ public class AIChaseController : MonoBehaviour
 
         // Re-enable player movement
         if (playerMovementToDisable != null) playerMovementToDisable.enabled = true;
+
+        GameManager.Instance.IsHandlingDeath = false; 
 
         // Start cooldown last
         StartCoroutine(CooldownTimer());

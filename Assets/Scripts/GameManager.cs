@@ -55,6 +55,8 @@ public class GameManager : MonoBehaviour
     public GameObject gameEndHud;
     public TMP_Text endGameTimeText;
     public TMP_Text endGameDeathCounter;
+    public TMP_Text endGameScore;
+
     [Header("References")]
     public MonoBehaviour lookScript;
 
@@ -79,6 +81,7 @@ public class GameManager : MonoBehaviour
     public int DeathCount { get; private set; } = 0;
     private float _elapsedTime = 0f;
     private bool _timerRunning = false;
+    public bool IsHandlingDeath { get; set; } = false;
 
     void Awake()
     {
@@ -138,7 +141,7 @@ public class GameManager : MonoBehaviour
     {
         DeathCount++;
         OnDeathCountChanged?.Invoke(DeathCount);
-        // Debug.Log($"Deaths: {DeathCount}");
+        Debug.Log($"Deaths: {DeathCount}");
     }
 
     public bool CollectVHS()
@@ -309,6 +312,7 @@ public class GameManager : MonoBehaviour
 
         // Stop the game
         State = GameState.Ended;
+        int score = ComputeScore(_elapsedTime, DeathCount);
         Time.timeScale = 0f;
         StopTimer();
 
@@ -329,6 +333,10 @@ public class GameManager : MonoBehaviour
         // Update time in end screen
         if (endGameTimeText != null)
             endGameTimeText.text = $"Time: {FormatTime(_elapsedTime)}";
+        
+        // Update score in end screen
+        if (endGameScore != null)
+            endGameScore.text = $"Score: {score}";
 
         // Show end screen
         if (gameEndHud) gameEndHud.SetActive(true);
@@ -357,6 +365,33 @@ public class GameManager : MonoBehaviour
     public void StartTimer() { _timerRunning = true; }
     public void StopTimer() { _timerRunning = false; }
     
+    int ComputeScore(float elapsedSeconds, int deaths)
+    {
+        const int MAX_SCORE = 999, MIN_SCORE = 1;
+
+        // TIME penalty (gentle, centered around +15 min)
+        const float FREE_TIME_SEC = 300f;   // 5:00 free
+        const float TIME_HALF_MIN = 15f;    // +15 min over -> ~0.5
+        const float KT            = 0.22f;  // slope (lower = softer)
+
+        float minutesOver = Mathf.Max(0f, (elapsedSeconds - FREE_TIME_SEC) / 60f);
+        float timeFactor  = (minutesOver <= 0f)
+            ? 1f
+            : 1f / (1f + Mathf.Exp(KT * (minutesOver - TIME_HALF_MIN)));
+
+        // DEATHS penalty (smooth, “harder to get high scores”)
+        // f(d) = 1 / (1 + (d/D0)^P)
+        // Tuned anchors: 10→~0.70, 30→~0.30, 50→~0.16 (and 0→1.0)
+        const float D0 = 17.320508f;  // scale
+        const float P  = 1.5424875f;  // curvature
+
+        float deathsFactor = 1f / (1f + Mathf.Pow(Mathf.Max(0f, deaths) / D0, P));
+
+        // COMBINE
+        float combined = timeFactor * deathsFactor;
+        int score = Mathf.RoundToInt(MIN_SCORE + (MAX_SCORE - MIN_SCORE) * combined);
+        return Mathf.Clamp(score, MIN_SCORE, MAX_SCORE);
+    }
 
     void DisableAll(Behaviour[] list)
     {

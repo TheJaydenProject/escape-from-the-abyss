@@ -309,7 +309,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   detectionRadius: 8
-  fovAngle: 130
+  fovAngle: 150
   eyeHeight: 1.5
   memoryTime: 3
   tickInterval: 0.1

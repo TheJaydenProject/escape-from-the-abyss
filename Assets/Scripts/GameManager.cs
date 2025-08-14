@@ -2,7 +2,7 @@ using UnityEngine;
 using TMPro;
 using System;
 
-public enum GameState { Playing, MilestoneReached, Paused }
+public enum GameState { Playing, Paused, Ended }
 
 public class GameManager : MonoBehaviour
 {
@@ -43,28 +43,35 @@ public class GameManager : MonoBehaviour
     public GameObject keyPickupFlash;
     public float keyPickupFlashDuration = 2f;
 
+    // --- TIMER HUD ---
+    [Header("HUD - Timer (Persistent)")]
+    public GameObject timerHudObject;
+    public TMP_Text timerHudText;
+
     [Header("HUD - Game End")]
     public GameObject gameEndHud;
+    public TMP_Text endGameTimeText;
     public TMP_Text endGameDeathCounter;
     [Header("References")]
-    public MonoBehaviour lookScript; 
-
+    public MonoBehaviour lookScript;
 
     [Space(6)]
     [Tooltip("Persistent panel/text that stays visible after picking up the key.")]
     public GameObject keyPickupPersistent;
 
-    public bool hasExitKey { get; private set; } = false;
-
     [Header("State")]
     public GameState State { get; private set; } = GameState.Playing;
     public bool vhsMilestoneReached { get; private set; } = false;
     public bool keyIsSpawned { get; set; } = false;
+    public bool hasExitKey { get; private set; } = false;
     public event System.Action<int, int> OnVHSCountChanged;
+
     // Event: VHS milestone reached
     public event System.Action OnVHSMilestone;
     bool _instruction2Shown = false;
     public int DeathCount { get; private set; } = 0;
+    private float _elapsedTime = 0f;
+    private bool _timerRunning = false;
 
     void Awake()
     {
@@ -76,6 +83,9 @@ public class GameManager : MonoBehaviour
         if (vhsCounterObject) vhsCounterObject.SetActive(true);
         UpdateVHSCounterUI();
         OnVHSCountChanged?.Invoke(currentVHS, targetVHS);
+
+        if (timerHudObject) timerHudObject.SetActive(true); 
+        UpdateTimerUI();
 
         // Ensure both instruction HUDs start hidden
         if (instructionHudFlash) instructionHudFlash.SetActive(false);
@@ -92,6 +102,7 @@ public class GameManager : MonoBehaviour
     {
         if (vhsCounterText == null) CacheCounterText();
         UpdateVHSCounterUI();
+        ResetTimer(startRunning: true);
     }
 
     void Update()
@@ -106,6 +117,13 @@ public class GameManager : MonoBehaviour
             if (instructionHudFlash) instructionHudFlash.SetActive(false);
 
             ShowKeySpawnInstructions();
+        }
+        
+        // TIMER
+        if (_timerRunning && State != GameState.Paused && State != GameState.Ended)
+        {
+            _elapsedTime += Time.deltaTime; 
+            UpdateTimerUI();
         }
     }
 
@@ -127,7 +145,6 @@ public class GameManager : MonoBehaviour
 
         if (currentVHS >= targetVHS)
         {
-            State = GameState.MilestoneReached;
             vhsMilestoneReached = true;
             if (vhsCounterObject) vhsCounterObject.SetActive(false);
             ShowMilestoneInstructions();
@@ -240,12 +257,22 @@ public class GameManager : MonoBehaviour
 
     public void PauseGame()
     {
-        if (State == GameState.Playing) { State = GameState.Paused; Time.timeScale = 0f; }
+        if (State == GameState.Playing)
+        {
+            State = GameState.Paused;
+            Time.timeScale = 0f;
+            StopTimer();
+        }
     }
 
     public void ResumeGame()
     {
-        if (State == GameState.Paused) { State = GameState.Playing; Time.timeScale = 1f; }
+        if (State == GameState.Paused)
+        {
+            State = GameState.Playing;
+            Time.timeScale = 1f;
+            StartTimer();
+        }
     }
 
 
@@ -254,18 +281,21 @@ public class GameManager : MonoBehaviour
         if (instructionHud2Flash) instructionHud2Flash.SetActive(false);
         if (instructionHud2Persistent) instructionHud2Persistent.SetActive(false);
     }
-    
+
     public void ShowGameEndHUD()
     {
         // Hide any other HUDs
-        if (instructionHud2Flash)      instructionHud2Flash.SetActive(false);
+        if (instructionHud2Flash) instructionHud2Flash.SetActive(false);
         if (instructionHud2Persistent) instructionHud2Persistent.SetActive(false);
-        if (keyPickupFlash)             keyPickupFlash.SetActive(false);
-        if (keyPickupPersistent)        keyPickupPersistent.SetActive(false);
+        if (keyPickupFlash) keyPickupFlash.SetActive(false);
+        if (keyPickupPersistent) keyPickupPersistent.SetActive(false);
+        if (timerHudObject) timerHudObject.SetActive(false);
+
 
         // Stop the game
-        State = GameState.Paused;
+        State = GameState.Ended;
         Time.timeScale = 0f;
+        StopTimer();
 
         // Stop camera movement
         if (lookScript != null) lookScript.enabled = false;
@@ -279,9 +309,36 @@ public class GameManager : MonoBehaviour
         if (endGameDeathCounter != null)
             endGameDeathCounter.text = $"Deaths: {DeathCount}";
 
+        // Update time in end screen
+        if (endGameTimeText != null)
+            endGameTimeText.text = $"Time: {FormatTime(_elapsedTime)}";
+
         // Show end screen
         if (gameEndHud) gameEndHud.SetActive(true);
     }
+    
+    string FormatTime(float t)
+    {
+        int minutes = Mathf.FloorToInt(t / 60f);
+        int seconds = Mathf.FloorToInt(t % 60f);
+        return $"{minutes:00}:{seconds:00}";
+    }
+
+    void UpdateTimerUI()
+    {
+        if (timerHudText != null)
+            timerHudText.text = FormatTime(_elapsedTime);
+    }
+
+    public void ResetTimer(bool startRunning = true)
+    {
+        _elapsedTime = 0f;
+        _timerRunning = startRunning;
+        UpdateTimerUI();
+    }
+
+    public void StartTimer()  { _timerRunning = true; }
+    public void StopTimer()   { _timerRunning = false; }
 
 }
 

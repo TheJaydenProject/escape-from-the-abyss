@@ -87,8 +87,8 @@ public class GameManager : MonoBehaviour
     public event System.Action<int, int> OnVHSCountChanged;
 
     [Header("End State - Freeze Stuff")]
-    public Transform[] detachOnEnd;         
-    public Behaviour[] disableOnEnd;         
+    public Transform[] detachOnEnd;
+    public Behaviour[] disableOnEnd;
 
     // Event: VHS milestone reached
     public event System.Action OnVHSMilestone;
@@ -105,7 +105,7 @@ public class GameManager : MonoBehaviour
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
         DontDestroyOnLoad(gameObject);
-
+        Time.timeScale = 1f;
         CacheCounterText();
         if (startIntroHud) startIntroHud.SetActive(true);
 
@@ -167,8 +167,8 @@ public class GameManager : MonoBehaviour
 
         if (!_counterActivated && ShouldShowCounterFor(scene.name))
         {
-            if (startIntroHud)     startIntroHud.SetActive(false);
-            if (vhsCounterObject)  vhsCounterObject.SetActive(true);
+            if (startIntroHud) startIntroHud.SetActive(false);
+            if (vhsCounterObject) vhsCounterObject.SetActive(true);
             UpdateVHSCounterUI();
             _counterActivated = true;
         }
@@ -385,6 +385,7 @@ public class GameManager : MonoBehaviour
         if (keyPickupPersistent) keyPickupPersistent.SetActive(false);
         if (timerHudObject) timerHudObject.SetActive(false);
 
+        SetActiveAll(enableOnKeyPickup, false);
 
         // Stop the game
         State = GameState.Ended;
@@ -394,7 +395,7 @@ public class GameManager : MonoBehaviour
 
         // Stop camera movement
         if (lookScript != null) lookScript.enabled = false;
-        DisableAll(disableOnEnd);         
+        DisableAll(disableOnEnd);
         DetachAll(detachOnEnd);
 
         // Unlock & show cursor
@@ -409,7 +410,7 @@ public class GameManager : MonoBehaviour
         // Update time in end screen
         if (endGameTimeText != null)
             endGameTimeText.text = $"Time: {FormatTime(_elapsedTime)}";
-        
+
         // Update score in end screen
         if (endGameScore != null)
             endGameScore.text = $"Score: {score}";
@@ -440,7 +441,7 @@ public class GameManager : MonoBehaviour
 
     public void StartTimer() { _timerRunning = true; }
     public void StopTimer() { _timerRunning = false; }
-    
+
     int ComputeScore(float elapsedSeconds, int deaths)
     {
         const int MAX_SCORE = 999, MIN_SCORE = 1;
@@ -448,10 +449,10 @@ public class GameManager : MonoBehaviour
         // TIME penalty (gentle, centered around +15 min)
         const float FREE_TIME_SEC = 300f;   // 5:00 free
         const float TIME_HALF_MIN = 15f;    // +15 min over -> ~0.5
-        const float KT            = 0.22f;  // slope (lower = softer)
+        const float KT = 0.22f;  // slope (lower = softer)
 
         float minutesOver = Mathf.Max(0f, (elapsedSeconds - FREE_TIME_SEC) / 60f);
-        float timeFactor  = (minutesOver <= 0f)
+        float timeFactor = (minutesOver <= 0f)
             ? 1f
             : 1f / (1f + Mathf.Exp(KT * (minutesOver - TIME_HALF_MIN)));
 
@@ -459,7 +460,7 @@ public class GameManager : MonoBehaviour
         // f(d) = 1 / (1 + (d/D0)^P)
         // Tuned anchors: 10→~0.70, 30→~0.30, 50→~0.16 (and 0→1.0)
         const float D0 = 17.320508f;  // scale
-        const float P  = 1.5424875f;  // curvature
+        const float P = 1.5424875f;  // curvature
 
         float deathsFactor = 1f / (1f + Mathf.Pow(Mathf.Max(0f, deaths) / D0, P));
 
@@ -480,7 +481,5 @@ public class GameManager : MonoBehaviour
         if (list == null) return;
         foreach (var t in list) if (t) t.SetParent(null, true); // keep world pos
     }
-
-
 }
 

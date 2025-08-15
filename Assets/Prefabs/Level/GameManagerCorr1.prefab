@@ -6072,6 +6072,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fa3bebdab008e4c40a93781a5b9d68d9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  playerRoot: {fileID: 0}
+  spawns: []
+  startIntroHud: {fileID: 0}
+  showCounterInScenes: []
   targetVHS: 25
   currentVHS: 20
   vhsCounterObject: {fileID: 4782863411448237134}

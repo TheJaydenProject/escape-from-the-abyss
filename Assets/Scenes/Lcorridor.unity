@@ -280,8 +280,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   doorSfx: {fileID: 1835346665}
-  sceneAsset: {fileID: 102900000, guid: 8c5b1d32847848d46bf3f49cb01db3c8, type: 3}
-  sceneToLoad: Prototype
+  sceneAsset: {fileID: 102900000, guid: 558d470ac2c127e4ba66bfefd19c71c8, type: 3}
+  sceneToLoad: Library
   fallbackWaitSeconds: 1
   extraDelay: 0
   disableCollidersOnUse: 1
@@ -1222,11 +1222,39 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 483974129013226896, guid: f8f6b75f296d726428c4f521e3ab9b61, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -220
+      objectReference: {fileID: 0}
+    - target: {fileID: 1044557237912849508, guid: f8f6b75f296d726428c4f521e3ab9b61, type: 3}
+      propertyPath: m_text
+      value: 'Escape '
+      objectReference: {fileID: 0}
+    - target: {fileID: 1044557237912849508, guid: f8f6b75f296d726428c4f521e3ab9b61, type: 3}
+      propertyPath: m_fontSize
+      value: 41.45
+      objectReference: {fileID: 0}
     - target: {fileID: 1253285024395198904, guid: f8f6b75f296d726428c4f521e3ab9b61, type: 3}
       propertyPath: m_Name
       value: GameManager
       objectReference: {fileID: 0}
+    - target: {fileID: 4783009952715438212, guid: f8f6b75f296d726428c4f521e3ab9b61, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6552789058229379225, guid: f8f6b75f296d726428c4f521e3ab9b61, type: 3}
+      propertyPath: m_text
+      value: Find Exit
+      objectReference: {fileID: 0}
+    - target: {fileID: 7233036617538234869, guid: f8f6b75f296d726428c4f521e3ab9b61, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7290244446058694412, guid: f8f6b75f296d726428c4f521e3ab9b61, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7734292882389500890, guid: f8f6b75f296d726428c4f521e3ab9b61, type: 3}
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}

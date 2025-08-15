@@ -25,6 +25,9 @@ public class PlayerInteractorRaycast : MonoBehaviour
 
     [Header("Door Prompt")]
     public GameObject DoorPromptPanel;
+    
+    [Header("ExitDoorLocked")]
+    public GameObject doorLockedHud;
 
     private IInteractable current;
     private int _vhsMaskValue;

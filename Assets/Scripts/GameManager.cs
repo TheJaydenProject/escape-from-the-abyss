@@ -1,6 +1,7 @@
 using UnityEngine;
 using TMPro;
 using System;
+using UnityEngine.SceneManagement;
 
 public enum GameState { Playing, Paused, Ended }
 
@@ -8,6 +9,17 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
     public event Action<int> OnDeathCountChanged;
+
+    [Header("Persistent Player Root")]
+    public Transform playerRoot;
+
+    [System.Serializable]
+    public class SceneSpawn { public string sceneName; public Transform spawn; }
+
+    [Header("Scene Spawn Points")]
+    public SceneSpawn[] spawns;
+    [Header("HUD - Start Intro ")]
+    public GameObject startIntroHud;
 
     [Header("Collection Goal")]
     [Min(1)] public int targetVHS = 25;
@@ -82,6 +94,7 @@ public class GameManager : MonoBehaviour
     private float _elapsedTime = 0f;
     private bool _timerRunning = false;
     public bool IsHandlingDeath { get; set; } = false;
+    int _sceneLoadsSinceAwake = 0;
 
     void Awake()
     {
@@ -90,9 +103,7 @@ public class GameManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
 
         CacheCounterText();
-        if (vhsCounterObject) vhsCounterObject.SetActive(true);
-        UpdateVHSCounterUI();
-        OnVHSCountChanged?.Invoke(currentVHS, targetVHS);
+        if (startIntroHud) startIntroHud.SetActive(true);
 
         if (timerHudObject) timerHudObject.SetActive(true);
         UpdateTimerUI();
@@ -106,7 +117,52 @@ public class GameManager : MonoBehaviour
 
         if (keyPickupFlash) keyPickupFlash.SetActive(false);
         if (keyPickupPersistent) keyPickupPersistent.SetActive(false);
+        if (vhsCounterObject) vhsCounterObject.SetActive(false);
+
+        UpdateVHSCounterUI();
+        OnVHSCountChanged?.Invoke(currentVHS, targetVHS);
     }
+
+    void OnEnable()
+    {
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+    void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    public void LoadSceneWithSpawn(string sceneName)
+    {
+        SceneManager.LoadScene(sceneName);
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        if (!playerRoot || spawns == null) return;
+
+        Transform spawn = null;
+        foreach (var s in spawns)
+            if (s != null && s.spawn && s.sceneName == scene.name) { spawn = s.spawn; break; }
+        if (!spawn) return;
+
+        var cc = playerRoot.GetComponent<CharacterController>();
+        if (cc) cc.enabled = false;
+        playerRoot.SetPositionAndRotation(spawn.position, spawn.rotation);
+        if (cc) cc.enabled = true;
+
+
+        // === First scene change since this GameManager woke up ===
+        if (_sceneLoadsSinceAwake == 1)
+        {
+            if (startIntroHud) startIntroHud.SetActive(false);
+            if (vhsCounterObject) vhsCounterObject.SetActive(true);
+            UpdateVHSCounterUI();
+        }
+
+        _sceneLoadsSinceAwake++;
+    }
+
 
     void Start()
     {
@@ -142,6 +198,15 @@ public class GameManager : MonoBehaviour
         DeathCount++;
         OnDeathCountChanged?.Invoke(DeathCount);
         Debug.Log($"Deaths: {DeathCount}");
+    }
+
+    public Transform GetSpawnForScene(string sceneName)
+    {
+        if (spawns == null) return null;
+        foreach (var s in spawns)
+            if (s != null && s.spawn && s.sceneName == sceneName)
+                return s.spawn;
+        return null;
     }
 
     public bool CollectVHS()

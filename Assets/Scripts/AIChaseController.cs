@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.AI;
 using System.Collections;
+using UnityEngine.SceneManagement;
 
 [RequireComponent(typeof(NavMeshAgent))]
 public class AIChaseController : MonoBehaviour
@@ -50,7 +51,11 @@ public class AIChaseController : MonoBehaviour
     bool _cooldownActive;
     int _patrolIndex;
 
-
+    Transform _playerT;
+    CharacterController _playerCC;
+    AudioListener _mainListener;
+    AudioListener _deathListener;
+    
     void Awake()
     {
         _agent = GetComponent<NavMeshAgent>();
@@ -85,6 +90,44 @@ public class AIChaseController : MonoBehaviour
         }
     }
 
+
+    void OnEnable()
+    {
+        SceneManager.sceneLoaded += OnSceneLoaded_ResetHudState;
+    }
+
+    void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded_ResetHudState;
+    }
+
+    void OnSceneLoaded_ResetHudState(Scene scene, LoadSceneMode mode)
+    {
+        // Clear cached references & state so the next death can hide HUD again
+        hudRoots = null;
+        _hudWasActive = null;
+        _hudHiddenForDeath = false;
+    }
+
+    GameObject[] ResolveHudRoots()
+    {
+        // If already set up, use what we have
+        if (hudRoots != null && hudRoots.Length > 0) return hudRoots;
+
+        var gm = GameManager.Instance;
+        if (!gm) return hudRoots; // stay null if no GM
+
+        // Grab all canvases under the persistent GameManager
+        var canvases = gm.GetComponentsInChildren<Canvas>(true);
+        if (canvases != null && canvases.Length > 0)
+        {
+            hudRoots = new GameObject[canvases.Length];
+            for (int i = 0; i < canvases.Length; i++)
+                hudRoots[i] = canvases[i] ? canvases[i].gameObject : null;
+        }
+
+        return hudRoots;
+    }
 
     void SetNextPatrolIndex()
     {
@@ -170,10 +213,25 @@ public class AIChaseController : MonoBehaviour
         _chaseRoutine = null;
     }
 
+    bool ResolvePlayer()
+    {
+        var gm = GameManager.Instance;
+        if (!gm || !gm.playerRoot) return false;
+
+        _playerT  = gm.playerRoot;                         
+        _playerCC = _playerT.GetComponent<CharacterController>();
+
+        // OPTIONAL: movement script to disable — leave unassigned in Inspector
+        if (!playerMovementToDisable)
+            playerMovementToDisable = _playerT.GetComponent<Behaviour>();
+
+        return true;
+    }
 
     public void Caught()
     {
         if (_cooldownActive || GameManager.Instance.IsHandlingDeath) return;
+        if (!ResolvePlayer()) return;
         _cooldownActive = true;
         GameManager.Instance.IsHandlingDeath = true;
         GameManager.Instance?.RegisterDeath();
@@ -202,20 +260,17 @@ public class AIChaseController : MonoBehaviour
 
     void HideHUDForDeath()
     {
-        if (hudRoots == null || _hudHiddenForDeath) return;
+        var roots = ResolveHudRoots();
+        if (roots == null || roots.Length == 0 || _hudHiddenForDeath) return;
 
-        if (_hudWasActive == null || _hudWasActive.Length != hudRoots.Length)
-            _hudWasActive = new bool[hudRoots.Length];
+        if (_hudWasActive == null || _hudWasActive.Length != roots.Length)
+            _hudWasActive = new bool[roots.Length];
 
-        for (int i = 0; i < hudRoots.Length; i++)
+        for (int i = 0; i < roots.Length; i++)
         {
-            var go = hudRoots[i];
+            var go = roots[i];
             if (!go) continue;
-
-            // remember the state the dev set in the scene / before death
-            _hudWasActive[i] = go.activeSelf;
-
-            // hide for death sequence
+            _hudWasActive[i] = go.activeSelf; // remember state
             go.SetActive(false);
         }
 
@@ -224,56 +279,106 @@ public class AIChaseController : MonoBehaviour
 
     void RestoreHUDAfterDeath()
     {
-        if (hudRoots == null || !_hudHiddenForDeath) return;
+        var roots = ResolveHudRoots();
+        if (roots == null || roots.Length == 0 || !_hudHiddenForDeath) return;
 
-        for (int i = 0; i < hudRoots.Length; i++)
+        for (int i = 0; i < roots.Length; i++)
         {
-            var go = hudRoots[i];
+            var go = roots[i];
             if (!go) continue;
-
-            // restore exactly what it was before HideHUDForDeath()
-            go.SetActive(_hudWasActive[i]);
+            bool was = (_hudWasActive != null && i < _hudWasActive.Length) ? _hudWasActive[i] : true;
+            go.SetActive(was);
         }
 
         _hudHiddenForDeath = false;
     }
+    
+    void EnableDeathCam()
+    {
+        // turn off main cam + its listener
+        if (mainCam)
+        {
+            if (!_mainListener) _mainListener = mainCam.GetComponent<AudioListener>();
+            if (_mainListener)  _mainListener.enabled = false;
+
+            mainCam.enabled = false;
+            mainCam.gameObject.SetActive(false);
+        }
+
+        // turn on death cam + ensure it has a listener
+        if (deathCam)
+        {
+            deathCam.gameObject.SetActive(true);
+            deathCam.enabled = true;
+
+            if (!_deathListener) _deathListener = deathCam.GetComponent<AudioListener>();
+            if (!_deathListener) _deathListener = deathCam.gameObject.AddComponent<AudioListener>();
+            _deathListener.enabled = true;   // <- force-enable here
+        }
+    }
+
     private IEnumerator HandleDeathAndRespawn()
     {
-        // Disable player movement
-        if (playerMovementToDisable != null) playerMovementToDisable.enabled = false;
+        if (!ResolvePlayer()) yield break;
 
-        // Teleport to respawn
-        var t = playerMovementToDisable.transform;
-        var cc = t.GetComponent<CharacterController>();
+        // Disable player movement
+        if (playerMovementToDisable) playerMovementToDisable.enabled = false;
+
+        var t = _playerT;
+        var cc = _playerCC;
 
         // Switch to death cam
-        if (mainCam != null) { mainCam.enabled = false; mainCam.gameObject.SetActive(false); }
-        if (deathCam != null) { deathCam.gameObject.SetActive(true); deathCam.enabled = true; }
+        EnableDeathCam();
         HideHUDForDeath();
 
         // Stay on death cam for Xs
         yield return new WaitForSeconds(1.8f);
 
-        if (cc != null)
+        // Teleport
+        Transform target = respawnPoint;
+        if (target == null && GameManager.Instance)
         {
-            cc.enabled = false;
-            t.SetPositionAndRotation(respawnPoint.position, respawnPoint.rotation);
-            cc.enabled = true;
+            string sceneName = SceneManager.GetActiveScene().name;
+            target = GameManager.Instance.GetSpawnForScene(sceneName);
+        }
+
+        if (target != null)
+        {
+            if (cc) cc.enabled = false;
+            t.SetPositionAndRotation(target.position, target.rotation);
+            if (cc) cc.enabled = true;
         }
         else
         {
-            t.SetPositionAndRotation(respawnPoint.position, respawnPoint.rotation);
+            Debug.LogWarning("[AIChaseController] No respawn target found (respawnPoint null and no GM spawn for this scene).");
         }
 
         // Switch back to main cam
-        if (deathCam != null) { deathCam.enabled = false; deathCam.gameObject.SetActive(false); }
-        if (mainCam != null) { mainCam.gameObject.SetActive(true); mainCam.enabled = true; }
+        if (deathCam)
+        {
+            if (!_deathListener) _deathListener = deathCam.GetComponent<AudioListener>();
+            if (_deathListener)  _deathListener.enabled = false;
+
+            deathCam.enabled = false;
+            deathCam.gameObject.SetActive(false);
+        }
+
+        if (mainCam)
+        {
+            mainCam.gameObject.SetActive(true);
+            mainCam.enabled = true;
+
+            if (!_mainListener) _mainListener = mainCam.GetComponent<AudioListener>();
+            if (!_mainListener) _mainListener = mainCam.gameObject.AddComponent<AudioListener>();
+            _mainListener.enabled = true;       // <- force-enable here
+        }
+
         RestoreHUDAfterDeath();
 
         // Re-enable player movement
-        if (playerMovementToDisable != null) playerMovementToDisable.enabled = true;
+        if (playerMovementToDisable) playerMovementToDisable.enabled = true;
 
-        GameManager.Instance.IsHandlingDeath = false; 
+        GameManager.Instance.IsHandlingDeath = false;
 
         // Start cooldown last
         StartCoroutine(CooldownTimer());

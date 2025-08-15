@@ -3,12 +3,11 @@ using UnityEngine;
 public class ExitDoor : MonoBehaviour, IInteractable
 {
     [Header("Locked feedback")]
-    public GameObject lockedFlashHud; 
     public float lockedFlashSeconds = 2f;
     public AudioSource lockedSfx;
 
     [Header("Open")]
-    public AudioSource openSfx;       
+    public AudioSource openSfx;
 
     public string PromptText =>
         (GameManager.Instance != null && GameManager.Instance.hasExitKey)
@@ -22,19 +21,22 @@ public class ExitDoor : MonoBehaviour, IInteractable
         if (!GameManager.Instance.hasExitKey)
         {
             if (lockedSfx) lockedSfx.Play();
-            if (lockedFlashHud) StartCoroutine(FlashLocked());
+
+            var hud = interactor != null ? interactor.doorLockedHud : null;
+            if (hud) StartCoroutine(FlashLocked(hud));
+
             return;
         }
 
-        // Has key → end game
         if (openSfx) openSfx.Play();
         GameManager.Instance.ShowGameEndHUD();
     }
 
-    private System.Collections.IEnumerator FlashLocked()
+    private System.Collections.IEnumerator FlashLocked(GameObject hud)
     {
-        lockedFlashHud.SetActive(true);
+        if (!hud) yield break;
+        hud.SetActive(true);
         yield return new WaitForSeconds(Mathf.Max(0f, lockedFlashSeconds));
-        if (lockedFlashHud) lockedFlashHud.SetActive(false);
+        if (hud) hud.SetActive(false);
     }
 }

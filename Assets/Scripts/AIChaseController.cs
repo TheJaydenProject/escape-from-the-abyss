@@ -30,6 +30,9 @@ public class AIChaseController : MonoBehaviour
     public float waitAtWaypoint = 0.5f;
     private int _previousPatrolIndex = -1;
 
+    [Header("Audio")]
+    public AudioSource caughtSfx;
+
     private int PickNextIndexNoRepeat(int current, int previous, int length)
     {
         if (length <= 1) return 0;
@@ -187,6 +190,12 @@ public class AIChaseController : MonoBehaviour
         _anim?.SetTrigger("Caught");
 
         Debug.Log("Player caught!");
+
+        // Play caught SFX if assigned
+        if (caughtSfx && caughtSfx.clip)
+        {
+            caughtSfx.Play();
+        }
 
         StartCoroutine(HandleDeathAndRespawn());
     }

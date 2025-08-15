@@ -41,7 +41,7 @@ AudioSource:
   m_GameObject: {fileID: 131661254800701494}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
+  OutputAudioMixerGroup: {fileID: 24300002, guid: 870efb45b19f5ff409a669dada12d802, type: 2}
   m_audioClip: {fileID: 8300000, guid: 3b2848bc0e1fc2a4c98371fc8beff377, type: 3}
   m_Resource: {fileID: 8300000, guid: 3b2848bc0e1fc2a4c98371fc8beff377, type: 3}
   m_PlayOnAwake: 0
@@ -421,6 +421,7 @@ MonoBehaviour:
   promptHudAfterMilestone: {fileID: 0}
   KeypromptPanel: {fileID: 0}
   DoorPromptPanel: {fileID: 0}
+  doorLockedHud: {fileID: 0}
 --- !u!114 &728132996215459211
 MonoBehaviour:
   m_ObjectHideFlags: 0

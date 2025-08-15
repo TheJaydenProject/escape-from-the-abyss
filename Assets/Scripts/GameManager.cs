@@ -71,6 +71,8 @@ public class GameManager : MonoBehaviour
     public TMP_Text endGameTimeText;
     public TMP_Text endGameDeathCounter;
     public TMP_Text endGameScore;
+    public EndHudAudioLoop endHudAudio;
+
 
     [Header("References")]
     public MonoBehaviour lookScript;
@@ -102,6 +104,9 @@ public class GameManager : MonoBehaviour
 
     void Awake()
     {
+        // Stop music
+        endHudAudio.StopLoop();
+        
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
         DontDestroyOnLoad(gameObject);
@@ -417,6 +422,9 @@ public class GameManager : MonoBehaviour
 
         // Show end screen
         if (gameEndHud) gameEndHud.SetActive(true);
+
+        // Play Audio
+        endHudAudio.PlayLoop();
     }
 
     string FormatTime(float t)

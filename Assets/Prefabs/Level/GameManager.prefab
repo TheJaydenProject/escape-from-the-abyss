@@ -754,6 +754,7 @@ MonoBehaviour:
   endGameTimeText: {fileID: 6950857804156190562}
   endGameDeathCounter: {fileID: 8159164900687537225}
   endGameScore: {fileID: 2873622101723570602}
+  endHudAudio: {fileID: 4890416195867018861}
   lookScript: {fileID: 1476621897531385879}
   keyPickupPersistent: {fileID: 7354083421980135912}
   detachOnEnd:
@@ -3428,7 +3429,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cd8214dd2bf1f6b49930f35e2ccfd358, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  loopClip: {fileID: 8300000, guid: 6a11360db88560b4081cecffe50e11b3, type: 3}
+  source: {fileID: 3984712855052301296}
 --- !u!82 &3984712855052301296
 AudioSource:
   m_ObjectHideFlags: 0
@@ -3438,13 +3439,13 @@ AudioSource:
   m_GameObject: {fileID: 4968605667821471941}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
-  m_audioClip: {fileID: 0}
-  m_Resource: {fileID: 0}
-  m_PlayOnAwake: 1
+  OutputAudioMixerGroup: {fileID: 24300002, guid: 870efb45b19f5ff409a669dada12d802, type: 2}
+  m_audioClip: {fileID: 8300000, guid: 6a11360db88560b4081cecffe50e11b3, type: 3}
+  m_Resource: {fileID: 8300000, guid: 6a11360db88560b4081cecffe50e11b3, type: 3}
+  m_PlayOnAwake: 0
   m_Volume: 1
   m_Pitch: 1
-  Loop: 0
+  Loop: 1
   Mute: 0
   Spatialize: 0
   SpatializePostEffects: 0

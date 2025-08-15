@@ -3,25 +3,25 @@ using UnityEngine;
 [RequireComponent(typeof(AudioSource))]
 public class EndHudAudioLoop : MonoBehaviour
 {
-    [Tooltip("If left empty, the AudioSource's clip will be used.")]
-    public AudioClip loopClip;
-
-    private AudioSource _src;
+    public AudioSource source; // Assign in inspector or auto-get
 
     void Awake()
     {
-        _src = GetComponent<AudioSource>();
-        if (loopClip) _src.clip = loopClip;
-        _src.loop = true;
+        if (!source)
+            source = GetComponent<AudioSource>();
+
+        source.loop = true; // Always loop
     }
 
-    void OnEnable()
+    public void PlayLoop()
     {
-        if (_src && _src.clip) _src.Play();
+        if (source && source.clip)
+            source.Play();
     }
 
-    void OnDisable()
+    public void StopLoop()
     {
-        if (_src) _src.Stop();
+        if (source)
+            source.Stop();
     }
 }

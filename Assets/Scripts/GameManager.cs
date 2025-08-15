@@ -21,6 +21,9 @@ public class GameManager : MonoBehaviour
     [Header("HUD - Start Intro ")]
     public GameObject startIntroHud;
 
+    [Header("HUD - VHS Counter visibility")]
+    public string[] showCounterInScenes;
+
     [Header("Collection Goal")]
     [Min(1)] public int targetVHS = 25;
     [SerializeField] public int currentVHS = 0;
@@ -95,6 +98,7 @@ public class GameManager : MonoBehaviour
     private bool _timerRunning = false;
     public bool IsHandlingDeath { get; set; } = false;
     int _sceneLoadsSinceAwake = 0;
+    bool _counterActivated = false;
 
     void Awake()
     {
@@ -137,6 +141,15 @@ public class GameManager : MonoBehaviour
         SceneManager.LoadScene(sceneName);
     }
 
+    bool ShouldShowCounterFor(string sceneName)
+    {
+        if (showCounterInScenes == null) return false;
+        for (int i = 0; i < showCounterInScenes.Length; i++)
+            if (!string.IsNullOrEmpty(showCounterInScenes[i]) && showCounterInScenes[i] == sceneName)
+                return true;
+        return false;
+    }
+
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         if (!playerRoot || spawns == null) return;
@@ -152,15 +165,13 @@ public class GameManager : MonoBehaviour
         if (cc) cc.enabled = true;
 
 
-        // === First scene change since this GameManager woke up ===
-        if (_sceneLoadsSinceAwake == 1)
+        if (!_counterActivated && ShouldShowCounterFor(scene.name))
         {
-            if (startIntroHud) startIntroHud.SetActive(false);
-            if (vhsCounterObject) vhsCounterObject.SetActive(true);
+            if (startIntroHud)     startIntroHud.SetActive(false);
+            if (vhsCounterObject)  vhsCounterObject.SetActive(true);
             UpdateVHSCounterUI();
+            _counterActivated = true;
         }
-
-        _sceneLoadsSinceAwake++;
     }
 
 

@@ -653,6 +653,8 @@ MonoBehaviour:
   - sceneName: Prototype
     spawn: {fileID: 1297991393789847462}
   startIntroHud: {fileID: 4783009952715438212}
+  showCounterInScenes:
+  - Prototype
   targetVHS: 25
   currentVHS: 20
   vhsCounterObject: {fileID: 7734292882389500890}

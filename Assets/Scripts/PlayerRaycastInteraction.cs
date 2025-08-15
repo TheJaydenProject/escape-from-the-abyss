@@ -32,6 +32,8 @@ public class PlayerInteractorRaycast : MonoBehaviour
     private int _keyMaskValue;
     private int _doorMaskValue;
 
+    private bool _computerUsed = false;
+
     void Awake()
     {
         _vhsMaskValue = vhsLayer.value;
@@ -80,7 +82,8 @@ public class PlayerInteractorRaycast : MonoBehaviour
                     }
                     else
                     {
-                        if (promptHudAfterMilestone) promptHudAfterMilestone.SetActive(true);
+                        if (!_computerUsed && promptHudAfterMilestone) 
+                            promptHudAfterMilestone.SetActive(true);
                     }
                 }
 
@@ -100,6 +103,13 @@ public class PlayerInteractorRaycast : MonoBehaviour
                 if (Input.GetKeyDown(KeyCode.E))
                 {
                     current.Interact(this);
+
+                    // If we just interacted with the COMPUTER after milestone, lock the prompt forever
+                    if ((hitLayerBit & _computerMaskValue) != 0)
+                    {
+                        bool milestone = GameManager.Instance != null && GameManager.Instance.vhsMilestoneReached;
+                        if (milestone) _computerUsed = true;
+                    }
                 }
             }
         }

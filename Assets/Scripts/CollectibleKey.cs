@@ -3,7 +3,7 @@ using UnityEngine;
 public class CollectibleKey : MonoBehaviour, IInteractable
 {
     [Header("SFX")]
-    public AudioSource pickupSfx; // can be elsewhere in the scene
+    public AudioSource pickupSfx;
 
     public string PromptText => "Press E to pick up Key";
 
@@ -27,12 +27,10 @@ public class CollectibleKey : MonoBehaviour, IInteractable
             }
             else
             {
-                // Source is elsewhere -> just one-shot and destroy key now
                 pickupSfx.PlayOneShot(pickupSfx.clip);
             }
         }
 
-        // Key is gone immediately in both paths when source is external
         Destroy(gameObject);
     }
 

@@ -736,7 +736,7 @@ MonoBehaviour:
   showCounterInScenes:
   - Library
   targetVHS: 25
-  currentVHS: 20
+  currentVHS: 0
   vhsCounterObject: {fileID: 7734292882389500890}
   instructionHudFlash: {fileID: 4596083588026514221}
   flashDuration: 2

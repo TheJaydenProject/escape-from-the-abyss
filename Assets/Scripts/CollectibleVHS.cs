@@ -1,22 +1,24 @@
 /*
  * Author: Jayden Wong
  * Date: 11/08/2025
- * Description: Handles interaction logic for collecting a VHS object in the scene.
- * Updates inventory, shows a temporary prompt confirmation UI, and removes the object from the world.
+ * Description: Handles the logic for collecting a VHS object. 
+ *              Plays optional sound and UI feedback, updates the GameManager inventory, 
+ *              hides the object from the scene, and destroys it after a short delay.
  */
-
-/// <summary>
-/// Allows the player to collect a VHS and adds it to their inventory.
-/// Shows a UI panel temporarily and logs the interaction for debugging.
-/// </summary>
 
 using System.Collections;
 using UnityEngine;
 
+/// <summary>
+/// Allows the player to collect a VHS and add it to the GameManager’s inventory. 
+/// Plays optional sound effects, shows a temporary UI panel if assigned, 
+/// and removes the VHS object from the scene after a short delay.
+/// </summary>
+
 public class CollectibleVHS : MonoBehaviour, IInteractable
 {
     [Header("UI Feedback (optional)")]
-    public GameObject collectedPanel;  
+    public GameObject collectedPanel;
     public float collectedPanelTime = 2f;
 
     [Header("VFX/SFX (optional)")]
@@ -24,6 +26,13 @@ public class CollectibleVHS : MonoBehaviour, IInteractable
 
     public string PromptText => "Press E to collect VHS";
 
+
+    
+    /// <summary>
+    /// Called when the script instance is being loaded.
+    /// Preloads audio data and ensures the sound is set to 2D 
+    /// so that the first playback is instant and non-positional.
+    /// </summary>
     void Awake()
     {
         // Preload & force 2D so first-play is instant and non-positional
@@ -35,6 +44,14 @@ public class CollectibleVHS : MonoBehaviour, IInteractable
         }
     }
 
+
+    /// <summary>
+    /// Handles player interaction with the VHS:
+    /// - Updates GameManager script
+    /// - Plays sound effects
+    /// - Hides colliders/renderers immediately
+    /// - Destroys the object after feedback is complete
+    /// </summary>
     public void Interact(PlayerInteractorRaycast interactor)
     {
         if (GameManager.Instance == null || !GameManager.Instance.CollectVHS())
@@ -83,6 +100,10 @@ public class CollectibleVHS : MonoBehaviour, IInteractable
         Destroy(gameObject, destroyDelay);
     }
 
+
+    /// <summary>
+    /// Shows the collected panel and automatically hides it after a delay.
+    /// </summary>
     private IEnumerator HidePanelAfterDelay()
     {
         collectedPanel.SetActive(true);
@@ -90,10 +111,17 @@ public class CollectibleVHS : MonoBehaviour, IInteractable
         if (collectedPanel) collectedPanel.SetActive(false);
     }
 
+
+    /// <summary>
+    /// Hides the VHS object visually and physically:
+    /// - Disables colliders
+    /// - Disables renderers
+    /// - Disables this script
+    /// </summary>
     void HideVHS()
     {
-        foreach (var c in GetComponentsInChildren<Collider>(true))  c.enabled = false;
-        foreach (var r in GetComponentsInChildren<Renderer>(true))  r.enabled = false;
+        foreach (var c in GetComponentsInChildren<Collider>(true)) c.enabled = false;
+        foreach (var r in GetComponentsInChildren<Renderer>(true)) r.enabled = false;
         enabled = false;
     }
 }

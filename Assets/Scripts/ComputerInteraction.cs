@@ -1,23 +1,71 @@
+/*
+ * Author: Jayden Wong
+ * Date: 11/08/2025
+ * Description: Handles player interaction with the computer terminal. 
+ *              Once the VHS milestone is reached, the terminal:
+ *              - Plays a sound effect
+ *              - Updates the screen material to show progress
+ *              - Spawns a key at a designated location
+ */
+
 using UnityEngine;
+
+/// <summary>
+/// Represents an interactive computer terminal that responds when the VHS milestone is reached. 
+/// On interaction, it can:
+/// - Play an optional sound effect
+/// - Update the screen’s material to indicate progress
+/// - Spawn a key at the given spawn point
+/// </summary>
+/// 
 
 public class ComputerTerminal : MonoBehaviour, IInteractable
 {
     [Header("Key Spawn")]
+    /// <summary>
+    /// Prefab of the key to spawn after the milestone is reached.
+    /// </summary>
     public GameObject keyPrefab;
+
+    /// <summary>
+    /// Transform location where the key will appear.
+    /// </summary>
     public Transform keySpawnPoint;
-    private bool keySpawned;
+
+    private bool keySpawned; // Tracks whether the key has already been spawned
 
     [Header("SFX")]
+    /// <summary>
+    /// Audio source to play when the terminal is used.
+    /// </summary>
     public AudioSource interactSfx;
 
     [Header("Material Swap")]
-    public Renderer screenRenderer;              
-    [Min(0)] public int screenMaterialIndex = 0; 
-    public Material materialAfterMilestone;    
-    private bool visualsUpdated;
+    /// <summary>
+    /// Renderer of the terminal screen to update when milestone is reached.
+    /// </summary>
+    public Renderer screenRenderer;
 
+    /// <summary>
+    /// Index of the material slot on the screen renderer to replace.
+    /// </summary>
+    [Min(0)] public int screenMaterialIndex = 0;
+
+    /// <summary>
+    /// Material to swap in after the VHS milestone is reached.
+    /// </summary>
+    public Material materialAfterMilestone;
+
+    private bool visualsUpdated; // Ensures material is swapped only once
+
+    /// <summary>
+    /// Prompt text for this interactable (empty since the terminal auto-triggers at milestone).
+    /// </summary>
     public string PromptText => string.Empty;
 
+    /// <summary>
+    /// Prepares the interact SFX: disables play on awake, forces 2D sound, and preloads the clip.
+    /// </summary>
     void Awake()
     {
         if (interactSfx && interactSfx.clip)
@@ -28,12 +76,19 @@ public class ComputerTerminal : MonoBehaviour, IInteractable
         }
     }
 
+    /// <summary>
+    /// Handles interaction with the terminal. If the VHS milestone is complete:
+    /// - Plays sound
+    /// - Updates the screen material
+    /// - Spawns a key (only once)
+    /// </summary>
+
     public void Interact(PlayerInteractorRaycast interactor)
     {
         var gm = GameManager.Instance;
         if (gm == null || !gm.vhsMilestoneReached) return;
 
-        // 1) SFX
+        // 1) Play SFX
         if (interactSfx && interactSfx.clip)
         {
             bool onSelf = interactSfx.transform == transform || interactSfx.transform.IsChildOf(transform);

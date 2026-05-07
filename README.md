@@ -175,14 +175,40 @@ The monster AI splits across two components: `AIChaseController` handles state t
 #### SightSensor - Vision System
 
 ```
-Broad phase:  Physics.OverlapSphereNonAlloc within detection radius
-      |
-Narrow phase: FOV cone check using dot product
-      |
-LOS check:    Raycast to three body points (head, chest, hips)
-              Player is visible if any one point has a clear line of sight
-      |
-Memory:       PlayerSeen stays true for memoryTime after direct LOS breaks
+How the monster detects the player (four stages, all must pass):
+
+1. RANGE CHECK
+   Physics.OverlapSphereNonAlloc fires every 0.1s around the monster.
+   If the player is not within detectionRadius, all further checks are skipped.
+   Using NonAlloc means no heap allocation per tick — the result writes into
+   a pre-allocated buffer, keeping GC pressure flat across all three monsters.
+
+2. FIELD OF VIEW CHECK
+   Even if the player is close enough, are they actually in front of the monster?
+   The monster has a configurable fovAngle (a cone of vision, e.g. 90 degrees).
+   The check uses a dot product between the monster's forward vector and the
+   direction to the player, then compares against cos(fovAngle / 2).
+   If the player is outside that cone — e.g. directly behind the monster — the
+   check fails and no raycast is fired.
+
+3. LINE OF SIGHT CHECK
+   The player is in range and in the FOV — but is there a wall between them?
+   Three raycasts fire from the monster's eye position (transform + eyeHeight offset)
+   toward three points on the player's body:
+     - Head  (localOffset y = 1.6)
+     - Chest (localOffset y = 1.2)
+     - Hips  (localOffset y = 0.9)
+   The player is detected if ANY single ray reaches them unobstructed.
+   This means crouching behind a shelf can block two rays, but a partial
+   exposure like a head poking out is still enough to trigger a chase.
+
+4. MEMORY
+   Once spotted, the monster does not immediately forget the player if they
+   duck behind cover. A _forgetAt timestamp is set to Time.time + memoryTime,
+   keeping PlayerSeen true for that window even after direct LOS breaks.
+   This prevents the player from rapidly blinking in and out of cover to
+   trivially reset a chase.
+
 ```
 
 Notable implementation details:

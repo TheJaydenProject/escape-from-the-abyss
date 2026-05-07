@@ -348,7 +348,6 @@ A clean run sits close to `MAX_SCORE`. High death counts or very long runs push 
 1. Download the build from the [Releases](../../releases) page
 2. Extract the ZIP
 3. Run `EscapeFromTheAbyss.exe`
-4. Recommended: 2560x1440 resolution at High quality settings
 
 ---
 

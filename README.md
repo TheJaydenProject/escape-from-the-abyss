@@ -12,6 +12,7 @@ A first-person horror game built in Unity 6 where you navigate two increasingly 
 - [Gameplay Features](#gameplay-features)
 - [Controls](#controls)
 - [Levels](#levels)
+- [Design Rationale](#design-rationale)
 - [Scoring System](#scoring-system)
 - [Technical Architecture](#technical-architecture)
   - [Script Overview](#script-overview)
@@ -28,7 +29,7 @@ A first-person horror game built in Unity 6 where you navigate two increasingly 
 
 ## Game Overview
 
-Escape from the Abyss is a first-person psychological horror game across two levels. The first level is built around environmental manipulation and misdirection. The second drops you into a fog-filled monster maze where the only way out is to search every corner and stay hidden long enough to find it.
+Escape from the Abyss is a first-person psychological horror game across two levels. The first is built around environmental manipulation and misdirection. The second drops you into a fog-filled monster maze where the only way out is to search every corner and stay hidden long enough to find it.
 
 ---
 
@@ -75,6 +76,34 @@ A large fog-filled maze built from repetitive bookshelves. Three monsters patrol
 **Objective:** Find all 25 VHS tapes spread throughout the maze. Insert them into the central computer to spawn a key. Pick up the key, then get out through the exit door.
 
 The maze layout makes navigation difficult by design. Every aisle looks the same, there is no map, and the monsters turn safe paths into dead ends.
+
+---
+
+## Design Rationale
+
+Both levels are built around spatial theory: using layout, visibility, and environmental logic to generate tension and uncertainty without relying entirely on scripted events or cheap scares.
+
+### Level 1 - Spatial Betrayal
+
+The L-shape of the corridor is deliberate. It cuts off long sightlines, keeping the player in a reactive state where planning is difficult. The locked door at the end is a false goal: it signals progress, builds expectation, and then denies it. When the player backtracks, the environment contradicts itself. The locked door disappears and a new one appears at the start. There is no explanation.
+
+This spatial inversion is the core mechanic of the level. It does not rely on a monster or a jump scare. The environment itself becomes the threat by proving it cannot be trusted. The player carries that instability into Level 2.
+
+Key principles applied: restricted visibility, false goal, spatial inversion, environmental contradiction.
+
+### Level 2 - Claustrophobic Immersion
+
+The library uses repetitive bookshelves and fog to prevent the player from forming a reliable mental map. Every aisle looks the same. Depth perception is flattened. The space feels both large and suffocating at the same time.
+
+The three monsters are placed in overlapping patrol zones so that safe corridors are never permanently safe. Their routes are fixed, but they will break from their zone to chase the player, which means any aisle can become dangerous at any point. Navigation becomes a constant read of risk rather than a straightforward search.
+
+The computer at the centre of the level acts as a structural anchor. All 25 VHS tapes funnel back to it. The progression chain, tapes to computer to key to exit, keeps the player moving through dangerous space repeatedly rather than finding the exit and rushing straight to it. Tension is maintained until the last moment because the exit door is hidden among shelving that looks identical to everything else.
+
+Key principles applied: repetition and disorientation, fog-restricted sightlines, patrol zones as dynamic hazards, distributed objectives, structured progression nodes.
+
+### Combined Arc
+
+The two levels form a deliberate progression. The Corridor establishes that the environment is unreliable. The Library scales that instability with size, repetition, and active threats. By the time the player reaches the exit, the sense of relief is earned because the design has been working against them the entire time.
 
 ---
 
@@ -191,12 +220,12 @@ public interface IInteractable {
 
 `PlayerRaycastInteraction` shoots a forward raycast from the camera each frame. When it hits something:
 - The layer is bitwise-checked against each layer mask to identify the object type
-- The matching HUD prompt activates (`VHSpromptPanel`, `KeypromptPanel`, `DoorPromptPanel`, or one of the computer prompts)
+- The matching HUD prompt activates
 - Pressing `E` calls `Interact()` on the hit object
 
 The computer prompt has three states:
-- Before VHS milestone: shows a "collect VHS tapes" prompt
-- After milestone: shows an "activate terminal" prompt  
+- Before VHS milestone: shows a collect VHS tapes prompt
+- After milestone: shows an activate terminal prompt
 - After the terminal is used: prompt is permanently hidden via `_computerUsed`
 
 ---
@@ -270,7 +299,7 @@ deathFactor = 1 / (1 + (deaths / D0) ^ P)
 score = MIN_SCORE + (MAX_SCORE - MIN_SCORE) * timeFactor * deathFactor
 ```
 
-A clean run sits close to `MAX_SCORE`. High death counts or very long runs push the score down smoothly rather than falling off a cliff at a specific threshold.
+A clean run sits close to `MAX_SCORE`. High death counts or very long runs push the score down smoothly rather than dropping off at a specific threshold.
 
 ---
 

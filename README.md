@@ -1,8 +1,8 @@
 # Escape from the Abyss
 
-> A first-person horror game built in Unity 2022.3 — navigate two terror-filled environments, evade intelligent AI monsters, and find your way out before the darkness consumes you.
+A first-person horror game built in Unity 6 where you navigate two increasingly hostile environments, evade patrolling AI monsters, and find a way out.
 
-**Platform:** Windows 10/11 (64-bit) | **Engine:** Unity 2022.3.10f1 | **Course:** I3E IP / Assignment 2
+**Platform:** Windows 10/11 (64-bit) | **Engine:** Unity 6.4 (6000.4.5f1)
 
 ---
 
@@ -17,18 +17,18 @@
   - [Script Overview](#script-overview)
   - [AI System (FSM)](#ai-system-fsm)
   - [Interaction System](#interaction-system)
-  - [Game State & Progression](#game-state--progression)
+  - [Game State and Progression](#game-state-and-progression)
   - [Audio System](#audio-system)
   - [Scoring Formula](#scoring-formula)
-- [Installation & Running](#installation--running)
+- [Installation and Running](#installation-and-running)
 - [Known Issues](#known-issues)
-- [Credits & Assets](#credits--assets)
+- [Credits and Assets](#credits-and-assets)
 
 ---
 
 ## Game Overview
 
-**Escape from the Abyss** is a first-person psychological horror experience that traps the player in shifting, unreliable environments designed to unsettle and disorient. The game progresses from subtle environmental betrayal to active survival horror, demanding both exploration and evasion to reach the end.
+Escape from the Abyss is a first-person psychological horror game across two levels. The first level is built around environmental manipulation and misdirection. The second drops you into a fog-filled monster maze where the only way out is to search every corner and stay hidden long enough to find it.
 
 ---
 
@@ -36,16 +36,16 @@
 
 | Feature | Description |
 |---|---|
-| Two hand-crafted levels | The Corridor and The Library — each with distinct mechanics |
-| Dynamic AI enemies | Three patrolling monsters with FOV detection, memory, and chase logic |
-| Collectible progression | 25 VHS tapes unlock the final exit sequence |
-| Environmental manipulation | Doors and passages shift when the player's back is turned |
-| Scoring system | Final score based on time taken and number of deaths |
-| Persistent HUD system | Context-aware prompts guide the player through each objective |
-| Full audio design | Spatial footsteps, jump scares, ambient loops, pickup SFX |
-| Main menu & end screen | Options, credits, how-to-play, and final score display |
-| Volume persistence | Master volume saved via PlayerPrefs across sessions |
-| Pause support | Freezes game state cleanly, re-enables on resume |
+| Two hand-crafted levels | The Corridor and The Library, each with different mechanics and pacing |
+| AI enemies | Three patrolling monsters with FOV detection, memory, and chase behaviour |
+| Collectible progression | Collecting 25 VHS tapes unlocks the exit sequence |
+| Environmental manipulation | Doors and exits shift when the player's back is turned |
+| Scoring | Final score calculated from time taken and number of deaths |
+| Context-aware HUD | Prompts update as the player progresses through each objective |
+| Audio design | Spatial footsteps, jump scare SFX, ambient loops, and pickup feedback |
+| Main menu and end screen | Options, credits, how-to-play panel, and final score display |
+| Volume persistence | Master volume saved between sessions via PlayerPrefs |
+| Pause | Cleanly freezes and restores game state |
 
 ---
 
@@ -55,135 +55,132 @@
 |---|---|
 | Move | `WASD` |
 | Look | Mouse |
-| Interact (pick up / open) | `E` |
+| Interact | `E` |
 | Pause | `Esc` |
 
 ---
 
 ## Levels
 
-### Level 1 — The Corridor
+### Level 1 - The Corridor
 
-An L-shaped hallway lit just enough to keep the player moving forward. A locked door at the far end promises an exit — but trying it yields nothing. When the player turns back, the locked door has vanished and a new exit has opened behind them.
+An L-shaped hallway where limited lighting keeps you moving forward. A locked door at the far end looks like the exit, but interacting with it does nothing. Turn around, and the door is gone. A new exit has appeared at the start.
 
-This level introduces **environmental betrayal**: the world cannot be trusted, spatial memory is unreliable, and false goals are used to manufacture dread.
+The goal here is disorientation. The level teaches the player that the environment itself cannot be trusted.
 
-### Level 2 — The Library
+### Level 2 - The Library
 
-A sprawling, fog-filled maze of repetitive bookshelves that destroy spatial orientation. Three monsters patrol the aisles, turning every route into a potential threat.
+A large fog-filled maze built from repetitive bookshelves. Three monsters patrol fixed routes, and they will chase you the moment they spot you.
 
-**Objective:** Collect all 25 VHS tapes scattered through the maze, insert them into the central computer to spawn an exit key, then unlock and escape through the final door.
+**Objective:** Find all 25 VHS tapes spread throughout the maze. Insert them into the central computer to spawn a key. Pick up the key, then get out through the exit door.
 
-This level layers **survival horror** on top of the disorientation from Level 1 — the player must explore without a map while avoiding enemies that actively hunt them.
+The maze layout makes navigation difficult by design. Every aisle looks the same, there is no map, and the monsters turn safe paths into dead ends.
 
 ---
 
 ## Scoring System
 
-Your final score is displayed on the end-game screen alongside your time and death count.
+Your final score is shown at the end alongside your completion time and death count.
 
-- **Faster completion → higher score**
-- **Fewer deaths → higher score**
-- Both penalties use smooth curves rather than hard cutoffs, so every second and every life counts
-
-A clean run (fast, zero deaths) scores near the maximum. A slow run with many deaths scores near the minimum.
+- Faster runs score higher
+- Fewer deaths score higher
+- Both factors use smooth curves, not hard penalties, so there is no cliff where one extra death or one extra minute tanks the score
 
 ---
 
 ## Technical Architecture
 
-This section is for developers and technical reviewers. The project contains **19 C# scripts** across gameplay, AI, audio, UI, and state management systems.
+The project contains 19 C# scripts covering gameplay, AI, audio, UI, and state management.
 
 ### Script Overview
 
 | Script | Responsibility |
 |---|---|
-| `GameManager.cs` | Central singleton — tracks VHS count, deaths, timer, HUD state, scene spawning, scoring |
-| `AIChaseController.cs` | Monster AI — patrol, chase, catch, death/respawn sequence, camera switching |
-| `SightSensor.cs` | AI vision — FOV cone, multi-point raycasting, memory timer |
-| `PlayerRaycastInteraction.cs` | Camera raycast interaction system with layer-specific prompts |
-| `IInteractable.cs` | Interface contract implemented by all interactable objects |
-| `CollectibleVHS.cs` | VHS tape pickup — SFX, UI panel, GameManager notification |
-| `CollectibleKey.cs` | Exit key pickup — SFX, hide/destroy, GameManager notification |
-| `ComputerInteraction.cs` | Terminal that spawns the key once the VHS milestone is reached |
-| `ExitDoor.cs` | Final door — locked feedback or win state depending on key possession |
-| `LockedDoor.cs` | Locked door with one-time reveal of a hidden object |
-| `SceneChangeDoor.cs` | Door that loads a new scene with pitch-adjusted SFX timing |
-| `DoorTrigger.cs` | One-shot trigger that swaps object visibility for level events |
-| `FootstepsSFX.cs` | Footstep audio loop driven by movement speed with sustain/fade logic |
-| `GameEndSfx.cs` | Looping end-game music controller |
+| `GameManager.cs` | Persistent singleton tracking VHS count, deaths, timer, HUD state, spawning, and scoring |
+| `AIChaseController.cs` | Monster behaviour: patrol, chase, catch detection, death and respawn sequence |
+| `SightSensor.cs` | AI vision: FOV cone, multi-point raycasting, memory timer |
+| `PlayerRaycastInteraction.cs` | Camera raycast interaction with layer-specific prompt handling |
+| `IInteractable.cs` | Interface implemented by all interactable objects |
+| `CollectibleVHS.cs` | VHS tape pickup with SFX, UI panel display, and GameManager callback |
+| `CollectibleKey.cs` | Exit key pickup with SFX, visual hiding, and GameManager callback |
+| `ComputerInteraction.cs` | Terminal that spawns the key once the VHS milestone is hit |
+| `ExitDoor.cs` | Final door: plays locked feedback or triggers win state based on key possession |
+| `LockedDoor.cs` | Locked door with a one-time object reveal on first interaction |
+| `SceneChangeDoor.cs` | Door that loads another scene with pitch-corrected SFX timing |
+| `DoorTrigger.cs` | One-shot trigger that swaps object visibility for scripted level events |
+| `FootstepsSFX.cs` | Footstep audio driven by movement speed, with sustain and optional fade |
+| `GameEndSfx.cs` | Looping end-game music with play and stop controls |
 | `MasterVolumeSlider.cs` | Logarithmic AudioMixer volume slider with PlayerPrefs persistence |
-| `MainMenu.cs` | Menu navigation, panel management, cursor/timescale setup |
-| `ReturnToMenu.cs` | Resets game state and returns to main menu scene |
-| `catchTrigger.cs` | Collider near the enemy that calls `AIChaseController.Caught()` |
-| `ChaserTEST.cs` | Legacy prototype AI (replaced by AIChaseController) |
+| `MainMenu.cs` | Menu panel navigation, cursor handling, and scene loading |
+| `ReturnToMenu.cs` | Resets time scale and cursor state, then loads the main menu |
+| `catchTrigger.cs` | Collider on the monster that calls `AIChaseController.Caught()` on player contact |
+| `ChaserTEST.cs` | Early prototype AI (superseded by AIChaseController, kept for reference) |
 
 ---
 
 ### AI System (FSM)
 
-The monster AI is built across two decoupled components: **`AIChaseController`** (behavior and state transitions) and **`SightSensor`** (perception).
+The monster AI splits across two components: `AIChaseController` handles state transitions and behaviour, while `SightSensor` handles perception independently.
 
 #### States
 
 ```
-Idle ──► Walk (Patrol)
-  │            │
-  └────────────┼──► Chase ──► Caught
-               │               │
-               └───────────────┘ (after respawn + cooldown)
+Idle <---> Walk (Patrol)
+  |              |
+  +--------------+----> Chase ----> Caught
+                                      |
+                         (respawn + cooldown, back to Idle)
 ```
 
 | State | Behaviour |
 |---|---|
-| **Idle** | Standing still at waypoint |
-| **Walk / Patrol** | Moving between `patrolPoints` via NavMeshAgent |
-| **Chase** | Re-pathing to player's last known position every 0.2 s |
-| **Caught** | Stops movement, plays SFX, switches to death camera, respawns player |
+| Idle | Waiting at a waypoint |
+| Walk / Patrol | Moving between `patrolPoints` via NavMeshAgent |
+| Chase | Re-pathing toward the player's last known position every 0.2s |
+| Caught | Stops movement, plays SFX, cuts to death camera, respawns the player |
 
 #### Transitions
 
-- `Idle ↔ Walk` — toggled by patrol waypoint arrival and wait timer
-- `Idle/Walk → Chase` — triggered when `SightSensor.PlayerSeen` becomes true
-- `Chase → Idle` — triggered when sight is lost after `memoryTime` expires
-- `Chase → Caught` — triggered when player enters the `CatchTrigger` collider
-- `Caught → Idle` — after respawn completes and `caughtCooldown` elapses
+- `Idle / Walk -> Chase` when `SightSensor.PlayerSeen` becomes true
+- `Chase -> Idle` when sight is lost and `memoryTime` runs out
+- `Chase -> Caught` when the player enters the `CatchTrigger` collider
+- `Caught -> Idle` after the respawn sequence completes and `caughtCooldown` expires
 
-#### SightSensor — Vision System
+#### SightSensor - Vision System
 
 ```
-Broad phase:  OverlapSphereNonAlloc (detection radius)
-      │
-Narrow phase: FOV cone check via dot product
-      │
-      ▼
-LOS check:    Raycast from eye position to head / chest / hips
-              (multi-point — player detected if ANY point is clear)
-      │
-Memory:       Player remains "seen" for memoryTime after losing direct LOS
+Broad phase:  Physics.OverlapSphereNonAlloc within detection radius
+      |
+Narrow phase: FOV cone check using dot product
+      |
+LOS check:    Raycast to three body points (head, chest, hips)
+              Player is visible if any one point has a clear line of sight
+      |
+Memory:       PlayerSeen stays true for memoryTime after direct LOS breaks
 ```
 
-- **Staggered ticks** — random start offset prevents all monsters checking vision on the same frame
-- **Non-alloc physics** — pre-allocated collider buffer avoids GC pressure
-- **Gizmo debug** — draws detection sphere and FOV cone bounds in the Scene view
+Notable implementation details:
+- Vision ticks are staggered with a random start offset so all three monsters do not check on the same frame
+- Uses `OverlapSphereNonAlloc` with a pre-allocated buffer to avoid per-frame GC allocations
+- Scene view gizmos draw the detection radius and FOV cone for easier tuning
 
-#### Death & Respawn Sequence
+#### Death and Respawn Sequence
 
-1. `CatchTrigger` fires → calls `AIChaseController.Caught()`
+1. `CatchTrigger` fires and calls `AIChaseController.Caught()`
 2. NavMesh stops, caught SFX plays, Animator trigger fires
-3. Death camera activates, audio listener transferred
-4. HUD hidden for cinematic effect
-5. Player movement disabled
-6. 1.8 s delay → player teleported to spawn point
-7. Main camera and HUD restored, movement re-enabled
-8. `caughtCooldown` timer prevents instant re-capture
-9. `GameManager.IsHandlingDeath` flag prevents concurrent double-processing
+3. Death camera activates and takes the audio listener
+4. HUD is hidden
+5. Player movement is disabled
+6. After 1.8s the player teleports to the spawn point
+7. Main camera and HUD are restored, movement re-enabled
+8. `caughtCooldown` blocks immediate re-capture
+9. `GameManager.IsHandlingDeath` prevents concurrent death processing if multiple triggers fire at once
 
 ---
 
 ### Interaction System
 
-All interactable objects implement the `IInteractable` interface:
+All interactable objects implement a shared interface:
 
 ```csharp
 public interface IInteractable {
@@ -192,57 +189,52 @@ public interface IInteractable {
 }
 ```
 
-`PlayerRaycastInteraction` fires a camera-forward raycast each frame. On hit:
-- The hit layer is bitwise-ANDed against each layer mask to identify the object type
-- The correct HUD prompt is shown (`VHSpromptPanel`, `KeypromptPanel`, `DoorPromptPanel`, or computer-specific panels)
-- Pressing `E` calls `interactable.Interact(this)`
+`PlayerRaycastInteraction` shoots a forward raycast from the camera each frame. When it hits something:
+- The layer is bitwise-checked against each layer mask to identify the object type
+- The matching HUD prompt activates (`VHSpromptPanel`, `KeypromptPanel`, `DoorPromptPanel`, or one of the computer prompts)
+- Pressing `E` calls `Interact()` on the hit object
 
-Computer prompt changes dynamically:
-- **Before milestone** — "Insert VHS tapes" prompt
-- **After milestone** — "Activate terminal" prompt
-- **After use** — prompt locked out permanently via `_computerUsed` flag
+The computer prompt has three states:
+- Before VHS milestone: shows a "collect VHS tapes" prompt
+- After milestone: shows an "activate terminal" prompt  
+- After the terminal is used: prompt is permanently hidden via `_computerUsed`
 
 ---
 
-### Game State & Progression
+### Game State and Progression
 
-`GameManager` is a persistent singleton (`DontDestroyOnLoad`) that coordinates all progression:
+`GameManager` is a `DontDestroyOnLoad` singleton that owns all progression state:
 
 ```
-Scene load
-    │
-    ▼
-Player spawned at scene-specific spawn point
-    │
-    ▼
-VHS collection (0 → 25)   ──►  Milestone: show instructions, unlock computer
-    │
-    ▼
-Computer interaction       ──►  Key spawns, key pickup instructions shown
-    │
-    ▼
-Key collected              ──►  Exit door unlocked, pickup HUD shown
-    │
-    ▼
-Exit door opened           ──►  ShowGameEndHUD() called
-                                Time frozen, score computed, end screen displayed
+Scene loads
+    |
+Player spawns at the scene-specific spawn point
+    |
+Collect VHS tapes (0 to 25) --> Milestone hit: computer unlocks, instructions shown
+    |
+Interact with computer --> Key spawns, key stage instructions shown
+    |
+Pick up the key --> Exit door unlocks, pickup HUD shown
+    |
+Open the exit door --> ShowGameEndHUD() called
+                       Time freezes, score calculated, end screen shown
 ```
 
-#### HUD Stage Machine
+#### HUD Stage Progression
 
 | Stage | HUD shown |
 |---|---|
-| Scene entry | Intro/instruction flash |
-| Collecting VHS | VHS counter (scene-gated) |
-| Milestone reached | Milestone flash + persistent reminder |
-| Key spawned | Key spawn flash + persistent reminder |
+| Scene entry | Intro instruction flash |
+| Collecting VHS | VHS counter (only shows in configured scenes) |
+| Milestone reached | Milestone flash plus a persistent reminder |
+| Key spawned | Key spawn flash plus a persistent reminder |
 | Key collected | Key pickup flash |
-| Game end | End screen (time, deaths, score) |
+| Game end | End screen with time, deaths, and score |
 
-Events fired:
-- `OnVHSCountChanged(int current, int target)` — updates counter text
-- `OnVHSMilestone` — unlocks computer
-- `OnDeathCountChanged(int count)` — tracks death total
+Events broadcast by GameManager:
+- `OnVHSCountChanged(int current, int target)` updates the counter text
+- `OnVHSMilestone` signals that the computer is now usable
+- `OnDeathCountChanged(int count)` tracks the running death total
 
 ---
 
@@ -250,71 +242,71 @@ Events fired:
 
 | Feature | Implementation |
 |---|---|
-| Footsteps | Speed-threshold detection, sustained movement gate, optional fade-out via coroutine |
-| Spatial audio | All pickups and UI sounds set `spatialBlend = 0` (full 2D) explicitly |
-| Deferred destruction | Objects with audio wait `clip.length / pitch` before destroying |
-| Audio on death | Listener transferred to death camera; restored after respawn |
-| Volume persistence | Linear slider → logarithmic dB conversion → saved to PlayerPrefs |
-| End-game loop | Dedicated `EndHudAudioLoop` component with `PlayLoop()` / `StopLoop()` |
+| Footsteps | Speed threshold detection with a sustain timer before audio starts; optional fade-out coroutine on stop |
+| Spatial audio | All pickup and UI sounds explicitly set `spatialBlend = 0` for full 2D playback |
+| Deferred destruction | Objects with audio compute `clip.length / pitch` and delay `Destroy()` until playback finishes |
+| Death audio | Audio listener transfers to the death camera during the sequence and transfers back after respawn |
+| Volume slider | Linear slider value converted to dB via `Log10(v) * 20` before applying to the AudioMixer |
+| End-game music | Dedicated `EndHudAudioLoop` component with explicit `PlayLoop()` and `StopLoop()` calls |
 
 ---
 
 ### Scoring Formula
 
-The score uses smooth mathematical curves instead of step penalties:
+Score uses continuous curves rather than fixed step penalties.
 
-**Time factor** — logistic curve (S-curve), penalises long runs gradually:
+**Time factor** (logistic S-curve, penalises slow runs gradually):
 ```
-timeFactor = 1 / (1 + exp(k × (minutesOver - halfPoint)))
+timeFactor = 1 / (1 + exp(k * (minutesOver - halfPoint)))
 ```
 
-**Death factor** — power law, heavy penalty past ~10 deaths:
+**Death factor** (power law, heavier penalty past around 10 deaths):
 ```
-deathFactor = 1 / (1 + (deaths / D₀)^P)
+deathFactor = 1 / (1 + (deaths / D0) ^ P)
 ```
 
 **Final score:**
 ```
-score = MIN_SCORE + (MAX_SCORE - MIN_SCORE) × timeFactor × deathFactor
+score = MIN_SCORE + (MAX_SCORE - MIN_SCORE) * timeFactor * deathFactor
 ```
 
-This means a perfect run scores near `MAX_SCORE`, while extreme values (50+ deaths, 30+ minutes) approach `MIN_SCORE` but never reach zero.
+A clean run sits close to `MAX_SCORE`. High death counts or very long runs push the score down smoothly rather than falling off a cliff at a specific threshold.
 
 ---
 
-## Installation & Running
+## Installation and Running
 
 ### Requirements
 
-- **OS:** Windows 10 or 11 (64-bit)
-- **Unity Build Version:** 2022.3.10f1
-- **CPU:** Intel i5 or equivalent
-- **RAM:** 8 GB minimum
-- **GPU:** DirectX 11 compatible
-- **Input:** Keyboard and mouse required
+- OS: Windows 10 or 11 (64-bit)
+- Unity build version: 6.4 (6000.4.5f1)
+- CPU: Intel i5 or equivalent
+- RAM: 8 GB minimum
+- GPU: DirectX 11 compatible
+- Input: Keyboard and mouse
 
 ### Steps
 
 1. Download the build from the [Releases](../../releases) page
-2. Extract the ZIP file
+2. Extract the ZIP
 3. Run `EscapeFromTheAbyss.exe`
-4. Recommended resolution: **2560×1440** at **High** quality for the best experience
+4. Recommended: 2560x1440 resolution at High quality settings
 
 ---
 
 ## Known Issues
 
-- **AI pathfinding stall** — Occasionally a monster may play the walking animation in place. It will recover and resume its patrol route automatically.
+- **AI pathfinding stall:** A monster may occasionally play the walk animation in place without moving. It will recover on its own and return to its patrol route.
 
 ---
 
-## Credits & Assets
+## Credits and Assets
 
 ### 3D Assets
 
 | Asset | Source |
 |---|---|
-| Monster | [Sketchfab — Smiler (Backrooms)](https://sketchfab.com/3d-models/smiler-backrooms-ea10d7f4750341f0ada6a12a6530014a) |
+| Monster | [Sketchfab - Smiler (Backrooms)](https://sketchfab.com/3d-models/smiler-backrooms-ea10d7f4750341f0ada6a12a6530014a) |
 | Wall, Floor, Ceiling, Ceiling Light | Self-made |
 | Door, Bookshelf, Books, Table | Self-made |
 | Curved Table, Pillar, Computer, VHS, Key | Self-made |
@@ -330,6 +322,6 @@ This means a perfect run scores near `MAX_SCORE`, while extreme values (50+ deat
 | Key pickup | [YouTube](https://www.youtube.com/watch?v=06ZSmICS0hA) |
 | Locked door | [Freesound](https://freesound.org/people/Leady/sounds/12739/) |
 | Open door | [Pixabay](https://pixabay.com/sound-effects/dorm-door-opening-6038/) |
-| Victory / end music | [Pixabay](https://pixabay.com/sound-effects/escape-from-hell-looping-tune-228492/) |
+| Victory music | [Pixabay](https://pixabay.com/sound-effects/escape-from-hell-looping-tune-228492/) |
 
 ---

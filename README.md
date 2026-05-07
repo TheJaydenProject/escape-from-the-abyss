@@ -156,6 +156,7 @@ The project contains 19 C# scripts covering gameplay, AI, audio, UI, and state m
 The monster AI splits across two components: `AIChaseController` handles state transitions and behaviour, while `SightSensor` handles perception independently.
 
 #### States
+<img width="1372" height="1105" alt="image" src="https://github.com/user-attachments/assets/94eeaee3-6f9a-4ca7-8e14-265973074a8d" />
 
 ```
 Idle <---> Walk (Patrol)

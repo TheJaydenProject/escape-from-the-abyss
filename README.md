@@ -212,7 +212,6 @@ How the monster detects the player (four stages, all must pass):
    keeping PlayerSeen true for that window even after direct LOS breaks.
    This prevents the player from rapidly blinking in and out of cover to
    trivially reset a chase.
-
 ```
 
 Notable implementation details:

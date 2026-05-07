@@ -1,6 +1,11 @@
 # Escape from the Abyss
-<img width="2195" height="1201" alt="Screenshot 2025-08-13 073223" src="https://github.com/user-attachments/assets/df47c169-8ada-46af-a2cd-f9dfb6ee9064" />
+
+A first-person horror game built in Unity 6 where you navigate two increasingly hostile environments, evade patrolling AI monsters, and find a way out.
+
+**Platform:** Windows 10/11 (64-bit) | **Engine:** Unity 6.4 (6000.4.5f1)
+
 <img width="2224" height="1236" alt="Screenshot 2025-08-13 065302" src="https://github.com/user-attachments/assets/9a0fa1b8-9cc4-423c-9e19-5840e1d028b1" />
+<img width="2195" height="1201" alt="Screenshot 2025-08-13 073223" src="https://github.com/user-attachments/assets/df47c169-8ada-46af-a2cd-f9dfb6ee9064" />
 <img width="2222" height="1226" alt="Screenshot 2025-08-13 065232" src="https://github.com/user-attachments/assets/e5a1962f-6037-4fee-a3ed-bdbce90adfe4" />
 
 A first-person horror game built in Unity 6 where you navigate two increasingly hostile environments, evade patrolling AI monsters, and find a way out.

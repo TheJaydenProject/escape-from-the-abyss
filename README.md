@@ -173,6 +173,9 @@ The monster AI splits across two components: `AIChaseController` handles state t
 - `Chase -> Caught` when the player enters the `CatchTrigger` collider
 - `Caught -> Idle` after the respawn sequence completes and `caughtCooldown` expires
 
+---
+
+
 #### SightSensor - Vision System
 
 ```

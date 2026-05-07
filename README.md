@@ -158,14 +158,6 @@ The monster AI splits across two components: `AIChaseController` handles state t
 #### States
 <img width="1372" height="1105" alt="image" src="https://github.com/user-attachments/assets/94eeaee3-6f9a-4ca7-8e14-265973074a8d" />
 
-```
-Idle <---> Walk (Patrol)
-  |              |
-  +--------------+----> Chase ----> Caught
-                                      |
-                         (respawn + cooldown, back to Idle)
-```
-
 | State | Behaviour |
 |---|---|
 | Idle | Waiting at a waypoint |
@@ -253,6 +245,9 @@ Pick up the key --> Exit door unlocks, pickup HUD shown
 Open the exit door --> ShowGameEndHUD() called
                        Time freezes, score calculated, end screen shown
 ```
+
+#### Gameplay Loop
+<img width="1035" height="1134" alt="image" src="https://github.com/user-attachments/assets/9172277b-7aae-4e1a-8112-4cb1f2be3073" />
 
 #### HUD Stage Progression
 

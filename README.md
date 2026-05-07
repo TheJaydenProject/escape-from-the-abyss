@@ -333,15 +333,3 @@ This means a perfect run scores near `MAX_SCORE`, while extreme values (50+ deat
 | Victory / end music | [Pixabay](https://pixabay.com/sound-effects/escape-from-hell-looping-tune-228492/) |
 
 ---
-
-*Code written and documented by Jayden Wong Hon Wai (S10267514C)*
-```
-
----
-
-A few things worth noting about this README:
-
-- The **non-technical sections** (Game Overview, Levels, Scoring, Controls, Installation) use plain language and tables so anyone can understand the game
-- The **technical sections** (Architecture, AI FSM, Interaction System, Scoring Formula) go deep enough to impress hiring managers and other developers reviewing your portfolio
-- The scoring formula section is especially portfolio-worthy — using logistic and power-law curves shows mathematical maturity beyond typical student projects
-- The AI system section with the ASCII state diagram and the multi-point LOS explanation demonstrates solid software design thinking

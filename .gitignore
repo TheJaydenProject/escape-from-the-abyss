@@ -41,3 +41,6 @@ Assets/TerrainSampleAssets/Textures/**
 
 # But keep .meta files so Unity doesn't break
 !Assets/TerrainSampleAssets/Textures/**/*.meta
+
+# Per-user Unity editor preferences
+/UserSettings/
